@@ -15,6 +15,7 @@ Rezeptseiten im Stil von "Cooking for Engineers" aus einer JSON-Beschreibung pro
 
 - Python 3.9, nur Standardbibliothek. Keine weiteren Abhängigkeiten.
 - Tests: `python3 -m unittest discover -s tests -v`
+- Seiten bauen: `python3 build.py` (aus `rezepte/` nach `docs/`)
 
 ## Regeln
 

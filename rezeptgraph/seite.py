@@ -94,3 +94,31 @@ def seite(rezept):
         teile.append(f'<p class="quelle">Quelle: <a href="{q}">{q}</a></p>')
     teile += ["</body>", "</html>", ""]
     return "\n".join(teile)
+
+
+def startseite(rezepte):
+    """Erzeugt die eigenständige HTML-Startseite aus (slug, rezept)-Paaren.
+    Die Liste ist nach Titel sortiert, unabhängig von der Eingabereihenfolge."""
+    sortiert = sorted(rezepte, key=lambda p: (p[1]["titel"].casefold(), p[1]["titel"], p[0]))
+    teile = [
+        "<!DOCTYPE html>",
+        '<html lang="de">',
+        "<head>",
+        '<meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        "<title>Rezepte</title>",
+        f"<style>{CSS}</style>",
+        "</head>",
+        "<body>",
+        "<h1>Rezepte</h1>",
+    ]
+    if sortiert:
+        teile.append('<ul class="rezepte">')
+        for slug, rezept in sortiert:
+            href = escape(slug + ".html")
+            teile.append(f'<li><a href="{href}">{escape(rezept["titel"])}</a></li>')
+        teile.append("</ul>")
+    else:
+        teile.append("<p>Noch keine Rezepte.</p>")
+    teile += ["</body>", "</html>", ""]
+    return "\n".join(teile)

@@ -56,10 +56,10 @@ Abnahmekriterien:
 Inhalt: `build.py` erzeugt aus allen Dateien in `rezepte/` die Seiten in `docs/`.
 
 Abnahmekriterien:
-- [ ] `python3 build.py` erzeugt `docs/index.html` und je Rezept `docs/<slug>.html`.
-- [ ] Startseite listet alle Rezepte mit Titel und funktionierendem relativen Link.
-- [ ] Ein ungültiges Rezept bricht den Build mit Meldung (Dateiname und Grund) ab, statt still übersprungen zu werden.
-- [ ] Build ist deterministisch (zweimal hintereinander gleiche Ausgabe).
+- [x] `python3 build.py` erzeugt `docs/index.html` und je Rezept `docs/<slug>.html`.
+- [x] Startseite listet alle Rezepte mit Titel und funktionierendem relativen Link.
+- [x] Ein ungültiges Rezept bricht den Build mit Meldung (Dateiname und Grund) ab, statt still übersprungen zu werden.
+- [x] Build ist deterministisch (zweimal hintereinander gleiche Ausgabe).
 
 ## Paket 5: Einlese-Ablauf in Claude Code
 
