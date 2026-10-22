@@ -11,16 +11,12 @@ andere Dateien in ziel in Ruhe gelassen.
 """
 
 import os
-import re
 import sys
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HIER)
 
 import rezeptgraph  # noqa: E402
-
-SLUG = re.compile(r"[a-z0-9][a-z0-9-]*")
-
 
 def seiten_erzeugen(quelle):
     """Gibt {dateiname: html} zurück oder wirft RezeptFehler mit Dateinamen."""
@@ -32,15 +28,8 @@ def seiten_erzeugen(quelle):
     seiten = {}
     paare = []
     for datei in dateien:
-        slug = datei[: -len(".json")]
         try:
-            if slug == "index":
-                raise rezeptgraph.RezeptFehler(
-                    "Der Name 'index' ist für die Startseite reserviert, bitte Datei umbenennen.")
-            if not SLUG.fullmatch(slug):
-                raise rezeptgraph.RezeptFehler(
-                    "Ungültiger Dateiname, erlaubt sind nur Kleinbuchstaben, Ziffern und "
-                    "Bindestrich (z.B. karottenkuchen.json), keine Umlaute oder Leerzeichen.")
+            slug = rezeptgraph.slug_pruefen(datei)
             rezept = rezeptgraph.laden(os.path.join(quelle, datei))
             seiten[slug + ".html"] = rezeptgraph.seite(rezept)
         except rezeptgraph.RezeptFehler as e:

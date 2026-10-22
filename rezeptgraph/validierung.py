@@ -1,6 +1,8 @@
 """Laden und Prüfen von Rezepten nach rezepte/FORMAT.md."""
 
 import json
+import os
+import re
 from urllib.parse import urlparse
 
 EU_ALLERGENE = (
@@ -14,15 +16,36 @@ class RezeptFehler(Exception):
     """Ein Rezept verstößt gegen das Format; die Meldung nennt den Grund."""
 
 
+_SLUG = re.compile(r"[a-z0-9][a-z0-9-]*")
+
+
+def slug_pruefen(dateiname):
+    """Gibt den Slug (Dateiname ohne .json) zurück oder wirft RezeptFehler.
+
+    Erlaubt sind nur Kleinbuchstaben, Ziffern und Bindestrich, 'index' ist
+    für die Startseite reserviert (rezepte/FORMAT.md).
+    """
+    name = os.path.basename(dateiname)
+    slug = name[: -len(".json")] if name.endswith(".json") else name
+    if slug == "index":
+        raise RezeptFehler(
+            "Der Name 'index' ist für die Startseite reserviert, bitte Datei umbenennen.")
+    if not _SLUG.fullmatch(slug):
+        raise RezeptFehler(
+            "Ungültiger Dateiname, erlaubt sind nur Kleinbuchstaben, Ziffern und "
+            "Bindestrich (z.B. karottenkuchen.json), keine Umlaute oder Leerzeichen.")
+    return slug
+
+
 def laden(pfad):
     """Liest eine Rezept-JSON, prüft sie und gibt das Rezept zurück."""
     try:
         with open(pfad, encoding="utf-8") as f:
             rezept = json.load(f)
     except OSError as e:
-        raise RezeptFehler(f"Datei {pfad} kann nicht gelesen werden: {e}") from e
+        raise RezeptFehler(f"Datei kann nicht gelesen werden: {e.strerror or e}") from e
     except ValueError as e:
-        raise RezeptFehler(f"Datei {pfad} ist kein gültiges JSON: {e}") from e
+        raise RezeptFehler(f"Datei ist kein gültiges JSON: {e}") from e
     validieren(rezept)
     return rezept
 

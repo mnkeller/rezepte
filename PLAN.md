@@ -66,8 +66,8 @@ Abnahmekriterien:
 Inhalt: Anleitung für Claude Code (Foto → JSON → Vorschau → Bestätigung → Build) und ein Vorschau-Befehl.
 
 Abnahmekriterien:
-- [ ] `python3 preview.py rezepte/<datei>.json` validiert die Datei und erzeugt eine lokale Vorschauseite, deren Pfad ausgegeben wird; Allergene werden in der Konsole aufgelistet.
-- [ ] Anleitung in `CLAUDE.md`: Foto lesen, JSON nach Format schreiben, Allergene ableiten, nach Quelle fragen falls nicht im Foto, Vorschau zeigen, erst nach Bestätigung bauen und committen.
+- [x] `python3 preview.py rezepte/<datei>.json` validiert die Datei und erzeugt eine lokale Vorschauseite, deren Pfad ausgegeben wird; Allergene werden in der Konsole aufgelistet.
+- [x] Anleitung in `CLAUDE.md`: Foto lesen, JSON nach Format schreiben, Allergene ableiten, nach Quelle fragen falls nicht im Foto, Vorschau zeigen, erst nach Bestätigung bauen und committen.
 
 ## Paket 6: Veröffentlichung und echter Durchlauf
 
