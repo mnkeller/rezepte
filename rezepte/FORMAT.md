@@ -1,6 +1,6 @@
 # Rezeptformat (JSON)
 
-Eine Datei pro Rezept in `rezepte/`, Dateiname = Slug der Seite (`brownies.json` → `brownies.html`).
+Eine Datei pro Rezept in `rezepte/`, Dateiname = Slug der Seite (`brownies.json` → `brownies.html`). Im Dateinamen nur Kleinbuchstaben, Ziffern und Bindestrich verwenden (z.B. `karottenkuchen.json`), keine Umlaute, kein Leerzeichen. `index` ist für die Startseite reserviert.
 
 ```json
 {

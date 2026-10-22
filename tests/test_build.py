@@ -368,5 +368,138 @@ class Aufraeumen(BuildTest):
                     self.assertEqual(f.read(), daten)
 
 
+# --- Nachbesserung aus dem Review: Slugs, versteckte Dateien, Zielschutz, Schreibfehler
+
+class SlugPruefung(BuildTest):
+    """Slugs müssen ^[a-z0-9][a-z0-9-]*$ entsprechen, 'index' ist reserviert."""
+
+    UNGUELTIG = ["Index.json", "Brownies.json", "mein rezept.json", "rührteig.json", "index.json"]
+
+    def test_ungueltiger_slug_bricht_ab(self):
+        for name in self.UNGUELTIG:
+            with self.subTest(datei=name):
+                shutil.rmtree(self.ziel, ignore_errors=True)
+                pfad = os.path.join(self.quelle, name)
+                shutil.copy(os.path.join(FIXTURES, "brownies.json"), pfad)
+                try:
+                    r = self.build()
+                    self.assertNotEqual(r.returncode, 0, r.stdout + r.stderr)
+                    self.assertIn(name, r.stdout + r.stderr)
+                    self.assertNotIn("Traceback", r.stdout + r.stderr)
+                    self.assertFalse(os.path.exists(self.ziel))
+                finally:
+                    os.remove(pfad)
+
+    def test_ungueltiger_slug_laesst_bestehendes_ziel_unveraendert(self):
+        for name in self.UNGUELTIG:
+            with self.subTest(datei=name):
+                shutil.rmtree(self.ziel, ignore_errors=True)
+                self.build_ok()
+                vorher = ordnerinhalt(self.ziel)
+                pfad = os.path.join(self.quelle, name)
+                shutil.copy(os.path.join(FIXTURES, "brownies.json"), pfad)
+                try:
+                    r = self.build()
+                    self.assertNotEqual(r.returncode, 0, r.stdout + r.stderr)
+                    self.assertEqual(ordnerinhalt(self.ziel), vorher)
+                finally:
+                    os.remove(pfad)
+
+    def test_gueltige_slugs_werden_gebaut(self):
+        for name in ["0-rezept.json", "a.json", "rezept-2.json"]:
+            shutil.copy(os.path.join(FIXTURES, "brownies.json"), os.path.join(self.quelle, name))
+        self.build_ok()
+        for name in ["0-rezept.html", "a.html", "rezept-2.html"]:
+            with self.subTest(datei=name):
+                self.assertTrue(os.path.isfile(os.path.join(self.ziel, name)))
+
+
+class VersteckteDateien(BuildTest):
+    """Dateien, deren Name mit '.' beginnt, werden ignoriert und nicht gelesen."""
+
+    def setUp(self):
+        super().setUp()
+        # AppleDouble-artiger Müll, kein gültiges UTF-8 und kein JSON
+        with open(os.path.join(self.quelle, "._brownies.json"), "wb") as f:
+            f.write(b"\x00\x05\x16\x07\x00\x02\x00\x00Mac OS X        \xff\xfe\x80")
+        with open(os.path.join(self.quelle, ".json"), "wb") as f:
+            f.write(b"{kaputt")
+
+    def test_build_gelingt(self):
+        self.build_ok()
+
+    def test_keine_seite_und_kein_link_fuer_versteckte(self):
+        self.build_ok()
+        html_dateien = sorted(f for f in os.listdir(self.ziel) if f.endswith(".html"))
+        self.assertEqual(html_dateien, sorted(["index.html"] + [s + ".html" for s in REZEPTE]))
+        p = einlesen(self.lies("index.html"))
+        rezeptlinks = sorted(h for h, _ in p.links if h and h.endswith(".html"))
+        self.assertEqual(rezeptlinks, sorted(s + ".html" for s in REZEPTE))
+
+    def test_unlesbare_versteckte_datei_wird_nicht_geoeffnet(self):
+        pfad = os.path.join(self.quelle, "._brownies.json")
+        os.chmod(pfad, 0)
+        self.addCleanup(os.chmod, pfad, 0o644)
+        if os.access(pfad, os.R_OK):
+            self.skipTest("Datei trotz chmod 0 lesbar (z.B. als root)")
+        self.build_ok()
+
+
+class ZielSchutz(BuildTest):
+    """Ziel = Quelle oder Elternordner der Quelle: Abbruch, nichts gelöscht."""
+
+    def pruefe_abbruch(self, ziel, ordner):
+        alt = {"alt.html": b"<p>alt</p>\n", "z-brownies.html": b"<p>handgeschrieben</p>"}
+        for name, daten in alt.items():
+            with open(os.path.join(ordner, name), "wb") as f:
+                f.write(daten)
+        vorher = ordnerinhalt(ordner)
+        r = self.build(ziel=ziel)
+        self.assertNotEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertTrue((r.stdout + r.stderr).strip(), "keine Meldung")
+        self.assertNotIn("Traceback", r.stdout + r.stderr)
+        for name, daten in alt.items():
+            with open(os.path.join(ordner, name), "rb") as f:
+                self.assertEqual(f.read(), daten, name)
+        self.assertEqual(ordnerinhalt(ordner), vorher)
+
+    def test_ziel_gleich_quelle(self):
+        self.pruefe_abbruch(self.quelle, self.quelle)
+
+    def test_ziel_gleich_quelle_anders_geschrieben(self):
+        self.pruefe_abbruch(os.path.join(self.quelle, "..", "quelle", "."), self.quelle)
+
+    def test_ziel_gleich_quelle_relativ(self):
+        # cwd des Builds ist self.tmp
+        self.pruefe_abbruch("quelle", self.quelle)
+
+    def test_ziel_ist_elternordner(self):
+        self.pruefe_abbruch(self.tmp, self.tmp)
+
+    def test_ziel_ist_grosselternordner(self):
+        tief = os.path.join(self.tmp, "a", "b")
+        os.makedirs(tief)
+        os.rename(self.quelle, os.path.join(tief, "quelle"))
+        self.quelle = os.path.join(tief, "quelle")
+        self.pruefe_abbruch(os.path.join(self.tmp, "a"), os.path.join(self.tmp, "a"))
+
+    def test_geschwisterordner_ist_erlaubt(self):
+        # Gegenprobe: ziel neben quelle (Standardfall rezepte/ -> docs/) bleibt erlaubt
+        self.build_ok()
+
+
+class Schreibfehler(BuildTest):
+    def test_ziel_ist_datei(self):
+        with open(self.ziel, "w", encoding="utf-8") as f:
+            f.write("ich bin eine Datei")
+        r = self.build()
+        ausgabe = r.stdout + r.stderr
+        self.assertNotEqual(r.returncode, 0, ausgabe)
+        self.assertTrue(ausgabe.strip(), "keine Meldung")
+        self.assertNotIn("Traceback", ausgabe)
+        with open(self.ziel, encoding="utf-8") as f:
+            self.assertEqual(f.read(), "ich bin eine Datei")
+
+
 if __name__ == "__main__":
     unittest.main()
