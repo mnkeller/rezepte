@@ -1,0 +1,227 @@
+{
+  "titel": "Karottenkuchen (vegan)",
+  "portionen": "12 Stück",
+  "quelle": "https://biancazapatka.com/en/moist-and-simple-carrot-cake-vegan/",
+  "vorbereitung": [
+    "Ofen auf 180 °C Ober-/Unterhitze vorheizen",
+    "Runde Backform (18–20 cm) einfetten"
+  ],
+  "zutaten": [
+    {
+      "id": "butter",
+      "menge": "125",
+      "einheit": "g",
+      "name": "vegane Butter, zimmerwarm"
+    },
+    {
+      "id": "zucker",
+      "menge": "100",
+      "einheit": "g",
+      "name": "Zucker"
+    },
+    {
+      "id": "salz",
+      "menge": "1",
+      "einheit": "Prise",
+      "name": "Salz"
+    },
+    {
+      "id": "vanille",
+      "menge": "1",
+      "einheit": "Prise",
+      "name": "gemahlene Vanille"
+    },
+    {
+      "id": "karotten",
+      "menge": "250",
+      "einheit": "g",
+      "name": "Karotten"
+    },
+    {
+      "id": "leinsamen",
+      "menge": "2",
+      "einheit": "EL",
+      "name": "geschrotete Leinsamen"
+    },
+    {
+      "id": "wasser",
+      "menge": "6",
+      "einheit": "EL",
+      "name": "heißes Wasser"
+    },
+    {
+      "id": "mehl",
+      "menge": "125",
+      "einheit": "g",
+      "name": "Weizen- oder Dinkelmehl"
+    },
+    {
+      "id": "zimt",
+      "menge": "½",
+      "einheit": "TL",
+      "name": "Zimt"
+    },
+    {
+      "id": "backpulver",
+      "menge": "1½",
+      "einheit": "TL",
+      "name": "Backpulver"
+    },
+    {
+      "id": "mandeln",
+      "menge": "100",
+      "einheit": "g",
+      "name": "gemahlene Mandeln"
+    },
+    {
+      "id": "essig",
+      "menge": "1",
+      "einheit": "TL",
+      "name": "Apfelessig"
+    },
+    {
+      "id": "natron",
+      "menge": "½",
+      "einheit": "TL",
+      "name": "Natron"
+    },
+    {
+      "id": "frischkaese",
+      "menge": "200",
+      "einheit": "g",
+      "name": "veganer Frischkäse"
+    },
+    {
+      "id": "puderzucker",
+      "menge": "80",
+      "einheit": "g",
+      "name": "Puderzucker"
+    },
+    {
+      "id": "zitrone",
+      "menge": "1",
+      "einheit": "Spritzer",
+      "name": "Zitronensaft"
+    },
+    {
+      "id": "vanille2",
+      "menge": "1",
+      "einheit": "Prise",
+      "name": "gemahlene Vanille (optional)"
+    },
+    {
+      "id": "marzipan",
+      "menge": "",
+      "einheit": "",
+      "name": "Marzipankarotten"
+    },
+    {
+      "id": "pistazien",
+      "menge": "",
+      "einheit": "",
+      "name": "gehackte Pistazien"
+    }
+  ],
+  "schritte": [
+    {
+      "id": "schlagen",
+      "text": "cremig schlagen",
+      "eingaenge": [
+        "butter",
+        "zucker",
+        "salz",
+        "vanille"
+      ]
+    },
+    {
+      "id": "raspeln",
+      "text": "schälen, fein raspeln",
+      "eingaenge": [
+        "karotten"
+      ]
+    },
+    {
+      "id": "leinei",
+      "text": "verrühren, 10 min quellen",
+      "eingaenge": [
+        "leinsamen",
+        "wasser"
+      ]
+    },
+    {
+      "id": "teig1",
+      "text": "unterrühren",
+      "eingaenge": [
+        "schlagen",
+        "raspeln",
+        "leinei"
+      ]
+    },
+    {
+      "id": "teig2",
+      "text": "kurz unterrühren",
+      "eingaenge": [
+        "teig1",
+        "mehl",
+        "zimt",
+        "backpulver",
+        "mandeln",
+        "essig",
+        "natron"
+      ]
+    },
+    {
+      "id": "backen",
+      "text": "backen 180 °C, 35–40 min",
+      "eingaenge": [
+        "teig2"
+      ]
+    },
+    {
+      "id": "auskuehlen",
+      "text": "vollständig auskühlen lassen",
+      "eingaenge": [
+        "backen"
+      ]
+    },
+    {
+      "id": "creme",
+      "text": "cremig schlagen",
+      "eingaenge": [
+        "frischkaese",
+        "puderzucker",
+        "zitrone",
+        "vanille2"
+      ]
+    },
+    {
+      "id": "bestreichen",
+      "text": "Kuchen bestreichen",
+      "eingaenge": [
+        "auskuehlen",
+        "creme"
+      ]
+    },
+    {
+      "id": "verzieren",
+      "text": "verzieren",
+      "eingaenge": [
+        "bestreichen",
+        "marzipan",
+        "pistazien"
+      ]
+    },
+    {
+      "id": "kuehlen",
+      "text": "kühl stellen, bis die Creme fest ist",
+      "eingaenge": [
+        "verzieren"
+      ]
+    }
+  ],
+  "allergene": [
+    "Glutenhaltiges Getreide",
+    "Schalenfrüchte",
+    "Soja"
+  ]
+}

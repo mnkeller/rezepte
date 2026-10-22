@@ -93,8 +93,8 @@ Abnahmekriterien:
 Inhalt: Push, GitHub Pages aus `main` / `docs`, ein echtes Rezept per Foto.
 
 Abnahmekriterien:
-- [ ] Startseite und Brownie-Seite sind unter `https://mnkeller.github.io/rezepte/` erreichbar.
-- [ ] Ein echtes Rezept per Foto komplett durchgelaufen und online.
+- [x] Startseite und Brownie-Seite sind unter `https://mnkeller.github.io/rezepte/` erreichbar.
+- [x] Ein echtes Rezept per Foto komplett durchgelaufen und online.
 
 Paket 6 braucht Michi (`gh auth login`, Foto liefern, Freigabe zum Push). Pages wird danach per `gh` auf `main` / `docs` eingeschaltet.
 
