@@ -194,13 +194,13 @@ class Abgelehnt(unittest.TestCase):
             {"id": "teil2", "text": "mit Ei", "eingaenge": ["ruehren", "ei"]},
             {"id": "backen", "text": "backen", "eingaenge": ["teil1", "teil2"]},
         ]
-        self.assertAbgelehnt(r, "ruehren")
+        self.assertAbgelehnt(r, "ruehren", "kein Baum")
 
     def test_nicht_baum_brownies_variante(self):
         r = fixture("brownies.json")
         # Zwischenprodukt "melt" geht zusätzlich in "fold" ein.
         r["schritte"][3]["eingaenge"].append("melt")
-        self.assertAbgelehnt(r, "melt")
+        self.assertAbgelehnt(r, "melt", "kein Baum")
 
     def test_zutat_in_zwei_schritten(self):
         r = basis()
@@ -221,7 +221,9 @@ class Abgelehnt(unittest.TestCase):
         r = basis()
         r["zutaten"].append({"id": "zimt", "menge": "1", "einheit": "TL", "name": "Zimt"})
         r["schritte"].append({"id": "extra", "text": "rösten", "eingaenge": ["zimt"]})
-        self.assertAbgelehnt(r)
+        meldung = self.assertAbgelehnt(r, "letzte")
+        self.assertIn("extra", meldung)
+        self.assertIn("backen", meldung)
 
     def test_zyklus(self):
         r = basis()
@@ -231,12 +233,12 @@ class Abgelehnt(unittest.TestCase):
             {"id": "b", "text": "b", "eingaenge": ["milch", "a"]},
             {"id": "backen", "text": "backen", "eingaenge": ["salz", "zimt"]},
         ]
-        self.assertAbgelehnt(r)
+        self.assertAbgelehnt(r, "Zyklus")
 
     def test_schritt_verweist_auf_sich_selbst(self):
         r = basis()
         r["schritte"][0]["eingaenge"].append("ruehren")
-        self.assertAbgelehnt(r)
+        self.assertAbgelehnt(r, "ruehren", "selbst")
 
     # Verweise und IDs
 
@@ -295,6 +297,13 @@ class Abgelehnt(unittest.TestCase):
         self.assertAbgelehnt(r)
         r["titel"] = "   "
         self.assertAbgelehnt(r)
+
+    def test_leerer_schritttext(self):
+        for wert in ("", "   "):
+            with self.subTest(text=wert):
+                r = basis()
+                r["schritte"][0]["text"] = wert
+                self.assertAbgelehnt(r, "text")
 
     def test_leerer_zutatenname(self):
         r = basis()

@@ -107,7 +107,7 @@ def validieren(rezept):
     for n, s in enumerate(schritte):
         schritt_ids.append(neue_id(s, f" in schritte[{n}]"))
         ort = f" in Schritt '{s['id']}'"
-        _feld(s, "text", str, ort)
+        _nicht_leer(_feld(s, "text", str, ort), "text", ort)
         eingaenge = _feld(s, "eingaenge", list, ort)
         if not eingaenge:
             raise RezeptFehler(f"Schritt '{s['id']}' hat keine Eingänge.")
@@ -147,6 +147,8 @@ def validieren(rezept):
     offen = [letzte[0]]
     while offen:
         knoten = offen.pop()
+        if knoten in erreicht:
+            continue
         erreicht.add(knoten)
         offen.extend(eingaenge_von.get(knoten, []))
     fehlend = [i for i in zutat_ids + schritt_ids if i not in erreicht]

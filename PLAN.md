@@ -31,13 +31,13 @@ Abnahmekriterien:
 Inhalt: Aus einem gültigen Rezept das Zellraster berechnen (Zeile, Spalte, rowspan, colspan, Inhalt), noch ohne HTML.
 
 Abnahmekriterien:
-- [ ] Fixture `tests/fixtures/brownies_cells.json` mit der erwarteten Zellstruktur der Vorlage; berechnetes Raster stimmt exakt überein.
-- [ ] Spalten der Schritte: melt | mix | mix | fold in | bake.
-- [ ] Leere Zellen: Zucker bis Espresso 1 Spalte × 3 Zeilen, Eier 2 Spalten × 1 Zeile, Mehl bis Salz 3 Spalten × 4 Zeilen.
-- [ ] Vorbereitungsschritte als Zeilen über volle Breite oben.
-- [ ] Das Raster ist lückenlos und überlappungsfrei: jede Position der Tabelle gehört zu genau einer Zelle.
-- [ ] Stehen die Zutaten eines Schritts in der JSON nicht direkt untereinander, wird das Rezept trotzdem dargestellt: Die Zutatenzeilen werden so umsortiert, dass jeder Teilbaum zusammenhängt, wobei die angegebene Reihenfolge so weit wie möglich erhalten bleibt. Bereits zusammenhängende Rezepte (Brownies) bleiben unverändert.
-- [ ] Ein Rezept mit aufgeteilter Zutat (zwei Teilmengen in verschiedenen Schritten) wird lückenlos dargestellt.
+- [x] Fixture `tests/fixtures/brownies_cells.json` mit der erwarteten Zellstruktur der Vorlage; berechnetes Raster stimmt exakt überein.
+- [x] Spalten der Schritte: melt | mix | mix | fold in | bake.
+- [x] Leere Zellen: Zucker bis Espresso 1 Spalte × 3 Zeilen, Eier 2 Spalten × 1 Zeile, Mehl bis Salz 3 Spalten × 4 Zeilen.
+- [x] Vorbereitungsschritte als Zeilen über volle Breite oben.
+- [x] Das Raster ist lückenlos und überlappungsfrei: jede Position der Tabelle gehört zu genau einer Zelle.
+- [x] Stehen die Zutaten eines Schritts in der JSON nicht direkt untereinander, wird das Rezept trotzdem dargestellt: Die Zutatenzeilen werden so umsortiert, dass jeder Teilbaum zusammenhängt, wobei die angegebene Reihenfolge so weit wie möglich erhalten bleibt. Bereits zusammenhängende Rezepte (Brownies) bleiben unverändert.
+- [x] Ein Rezept mit aufgeteilter Zutat (zwei Teilmengen in verschiedenen Schritten) wird lückenlos dargestellt.
 
 ## Paket 3: Rezeptseite (HTML)
 
@@ -84,6 +84,7 @@ Paket 6 braucht Michi (`gh auth login`, Foto liefern, Freigabe zum Push). Pages 
 - `gh` wird installiert, Pages per `gh` aktivieren.
 - Nicht zusammenhängende Zutaten werden nicht abgelehnt, sondern umsortiert (Paket 2).
 - Aufgeteilte Zutaten ("Hälfte jetzt, Hälfte später") werden als zwei Zutatenzeilen erfasst. Abgelehnt wird nur, wenn ein Zwischenprodukt (Ergebnis eines Schritts) aufgeteilt wird.
+- Umsortieren: Teilbäume erscheinen in der Reihenfolge ihres ersten Auftretens (einfach und vorhersehbar; zusammenhängende Rezepte bleiben unverändert). Kein Optimieren auf minimale Verschiebung.
 - Repo bleibt im Nextcloud-Ordner.
 - Rezept für den echten Durchlauf: https://biancazapatka.com/en/moist-and-simple-carrot-cake-vegan/ (Screenshot der Seite als "Foto"; Quelle = dieser Link).
 

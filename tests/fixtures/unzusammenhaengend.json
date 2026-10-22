@@ -1,0 +1,21 @@
+{
+  "titel": "Pfannkuchen (Zutaten nicht zusammenhängend)",
+  "portionen": "4",
+  "quelle": null,
+  "vorbereitung": ["Pfanne erhitzen"],
+  "zutaten": [
+    {"id": "mehl", "menge": "200", "einheit": "g", "name": "Mehl"},
+    {"id": "eier", "menge": "3", "einheit": "", "name": "Eier"},
+    {"id": "salz", "menge": "1", "einheit": "Prise", "name": "Salz"},
+    {"id": "milch", "menge": "300", "einheit": "ml", "name": "Milch"},
+    {"id": "zucker", "menge": "20", "einheit": "g", "name": "Zucker"},
+    {"id": "butter", "menge": "", "einheit": "", "name": "Butter zum Braten"}
+  ],
+  "schritte": [
+    {"id": "sieben", "text": "sieben", "eingaenge": ["mehl", "salz", "zucker"]},
+    {"id": "verquirlen", "text": "verquirlen", "eingaenge": ["eier", "milch"]},
+    {"id": "verruehren", "text": "glatt rühren", "eingaenge": ["sieben", "verquirlen"]},
+    {"id": "braten", "text": "portionsweise braten", "eingaenge": ["verruehren", "butter"]}
+  ],
+  "allergene": ["Glutenhaltiges Getreide", "Eier", "Milch"]
+}
