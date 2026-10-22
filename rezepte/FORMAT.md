@@ -38,7 +38,7 @@ Eine Datei pro Rezept in `rezepte/`, Dateiname = Slug der Seite (`brownies.json`
 | `zutaten[].name` | ja | nicht leerer Text |
 | `schritte` | ja | Liste, mindestens einer |
 | `schritte[].id` | ja | eindeutig im Rezept, auch gegenüber Zutaten-IDs |
-| `schritte[].text` | ja | Bezeichnung in der Zelle |
+| `schritte[].text` | ja | nicht leerer Text, Bezeichnung in der Zelle |
 | `schritte[].eingaenge` | ja | nicht leere Liste von Zutaten- oder Schritt-IDs |
 | `allergene` | ja | Liste aus den 14 EU-Hauptallergenen (Schreibweise siehe unten), darf leer sein |
 

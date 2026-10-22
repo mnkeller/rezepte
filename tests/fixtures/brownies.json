@@ -1,0 +1,27 @@
+{
+  "titel": "Brownies",
+  "portionen": "1 Form (20 × 20 cm)",
+  "vorbereitung": [
+    "Butter and flour a 20 × 20 cm pan",
+    "Preheat oven to 170 °C"
+  ],
+  "zutaten": [
+    {"id": "butter", "menge": "115", "einheit": "g", "name": "unsalted butter"},
+    {"id": "sugar", "menge": "200", "einheit": "g", "name": "sugar"},
+    {"id": "vanilla", "menge": "2.5", "einheit": "ml", "name": "vanilla extract"},
+    {"id": "espresso", "menge": "60", "einheit": "ml", "name": "fresh brewed espresso or very strong coffee"},
+    {"id": "eggs", "menge": "100", "einheit": "g", "name": "eggs (2 large)"},
+    {"id": "flour", "menge": "80", "einheit": "g", "name": "all-purpose flour"},
+    {"id": "cocoa", "menge": "80", "einheit": "g", "name": "Hershey's cocoa powder"},
+    {"id": "soda", "menge": "1.3", "einheit": "g", "name": "baking soda"},
+    {"id": "salt", "menge": "1.5", "einheit": "g", "name": "table salt"}
+  ],
+  "schritte": [
+    {"id": "melt", "text": "melt", "eingaenge": ["butter"]},
+    {"id": "mix1", "text": "mix", "eingaenge": ["melt", "sugar", "vanilla", "espresso"]},
+    {"id": "mix2", "text": "mix", "eingaenge": ["mix1", "eggs"]},
+    {"id": "fold", "text": "fold in", "eingaenge": ["mix2", "flour", "cocoa", "soda", "salt"]},
+    {"id": "bake", "text": "bake 170 °C 30 to 40 min", "eingaenge": ["fold"]}
+  ],
+  "allergene": ["Milch", "Eier", "Glutenhaltiges Getreide"]
+}

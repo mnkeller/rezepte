@@ -1,0 +1,17 @@
+{
+  "titel": "Rührteig mit aufgeteiltem Zucker",
+  "portionen": "4",
+  "quelle": null,
+  "vorbereitung": [],
+  "zutaten": [
+    {"id": "butter", "menge": "100", "einheit": "g", "name": "Butter"},
+    {"id": "zucker1", "menge": "100", "einheit": "g", "name": "Zucker (1. Hälfte)"},
+    {"id": "eier", "menge": "2", "einheit": "", "name": "Eier"},
+    {"id": "zucker2", "menge": "100", "einheit": "g", "name": "Zucker (2. Hälfte)"}
+  ],
+  "schritte": [
+    {"id": "schaumig", "text": "schaumig rühren", "eingaenge": ["butter", "zucker1"]},
+    {"id": "schlagen", "text": "unterschlagen", "eingaenge": ["schaumig", "eier", "zucker2"]}
+  ],
+  "allergene": ["Milch", "Eier"]
+}

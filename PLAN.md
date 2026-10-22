@@ -19,12 +19,12 @@ Paket `rezeptgraph/`, importierbar als `import rezeptgraph`:
 Inhalt: Brownie-Vorlage als Referenz-JSON, Validierung beim Laden. Das Format ist in `rezepte/FORMAT.md` festgelegt (von der Koordination geschrieben).
 
 Abnahmekriterien:
-- [ ] `validieren` und `laden` setzen `rezepte/FORMAT.md` um.
-- [ ] `tests/fixtures/brownies.json` bildet `vorlage/brownies.png` ab (Englisch erlaubt).
-- [ ] Brownie-JSON wird als gültig geladen.
-- [ ] Nicht-Baum-Rezept (ein Zwischenprodukt geht in zwei Schritte ein) wird mit klarer Meldung abgelehnt.
-- [ ] Ebenso abgelehnt mit klarer Meldung: Zutat in zwei Schritten, Eingang verweist auf Unbekanntes, Pflichtfeld fehlt, Allergen nicht aus der EU-Liste der 14 Hauptallergene.
-- [ ] Ein Testrezept mit aufgeteilter Zutat (zwei Zutatenzeilen, siehe `FORMAT.md`) ist gültig.
+- [x] `validieren` und `laden` setzen `rezepte/FORMAT.md` um.
+- [x] `tests/fixtures/brownies.json` bildet `vorlage/brownies.png` ab (Englisch erlaubt).
+- [x] Brownie-JSON wird als gültig geladen.
+- [x] Nicht-Baum-Rezept (ein Zwischenprodukt geht in zwei Schritte ein) wird mit klarer Meldung abgelehnt.
+- [x] Ebenso abgelehnt mit klarer Meldung: Zutat in zwei Schritten, Eingang verweist auf Unbekanntes, Pflichtfeld fehlt, Allergen nicht aus der EU-Liste der 14 Hauptallergene.
+- [x] Ein Testrezept mit aufgeteilter Zutat (zwei Zutatenzeilen, siehe `FORMAT.md`) ist gültig.
 
 ## Paket 2: Layout (Zellraster)
 
