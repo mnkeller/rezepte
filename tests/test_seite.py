@@ -552,17 +552,32 @@ class Senkrecht(SeitenTest):
     def senkrecht_regeln(self):
         return [(s, d) for s, d in self.regeln if selektor_erwaehnt(s, ".senkrecht")]
 
-    def test_css_schreibrichtung_von_unten_nach_oben(self):
+    def test_css_schreibrichtung_von_oben_nach_unten(self):
+        """Paket 5c: writing-mode vertical-rl, keine Drehung um 180°, kein sideways-lr."""
         regeln = self.senkrecht_regeln()
         self.assertTrue(regeln, "keine CSS-Regel für .senkrecht")
-        modi = {d.get("writing-mode") for _, d in regeln} - {None}
-        transforms = " ".join(d.get("transform", "") for _, d in regeln).replace(" ", "")
-        if "sideways-lr" in modi:
-            return
-        self.assertTrue(modi & {"vertical-rl", "vertical-lr"},
-                        f"keine senkrechte Schreibrichtung für .senkrecht: {regeln}")
-        self.assertRegex(transforms, r"rotate\((180deg|-180deg|0?\.5turn|-0?\.5turn)\)",
-                         "senkrechter Text nicht von unten nach oben lesbar (rotate(180deg) fehlt)")
+        modi = [d.get("writing-mode") for _, d in regeln if "writing-mode" in d]
+        self.assertIn("vertical-rl", modi,
+                      f"für .senkrecht (oder sein inneres Element) fehlt writing-mode: vertical-rl: {regeln}")
+        drehung = re.compile(r"(-?180deg|-?0?\.5turn|-?200grad|-?3\.14\d*rad)")
+        for s, d in regeln:
+            with self.subTest(selektor=s):
+                self.assertNotIn("sideways-lr", d.get("writing-mode", ""),
+                                 f"sideways-lr liest von unten nach oben: {s} {d}")
+                for eig in ("transform", "rotate"):
+                    wert = d.get(eig, "").replace(" ", "")
+                    self.assertIsNone(drehung.search(wert),
+                                      f"Drehung um 180° in {s} {{{eig}: {wert}}}")
+        # Auch Inline-Styles der senkrechten Zellen und ihrer Nachfahren
+        for t, a, vorfahren in self.p.elemente:
+            betroffen = [a] + [va for _, va in vorfahren]
+            if not any("senkrecht" in (x.get("class") or "").split() for x in betroffen):
+                continue
+            d = inline_decl(a.get("style"))
+            with self.subTest(element=t, style=a.get("style")):
+                self.assertNotIn("sideways-lr", d.get("writing-mode", ""))
+                for eig in ("transform", "rotate"):
+                    self.assertIsNone(drehung.search(d.get(eig, "").replace(" ", "")))
 
     def test_css_senkrechte_zellen_brechen_um(self):
         regeln = self.senkrecht_regeln()
@@ -618,6 +633,100 @@ class Senkrecht(SeitenTest):
             with self.subTest(fixture=name):
                 p = einlesen(rezeptgraph.seite(fixture(name)))
                 self.pruefe_max_height(p)
+
+
+class Abfolgeleser(HTMLParser):
+    """Text des Body außerhalb der Tabelle, mit Markern für h1, Tabelle und Links."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.teile = []
+        self.im_body = False
+        self.in_tabelle = 0
+        self.ignorieren = 0
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "body":
+            self.im_body = True
+        elif tag in ("style", "script", "title", "head"):
+            self.ignorieren += 1
+        elif tag == "table":
+            if not self.in_tabelle:
+                self.teile.append(" \x00TABELLE_START\x00 ")
+            self.in_tabelle += 1
+        elif tag == "h1" and not self.in_tabelle:
+            self.teile.append(" \x00H1\x00 ")
+        elif tag == "a" and attrs.get("href") and not self.in_tabelle:
+            self.teile.append(" \x00LINK:" + attrs["href"] + "\x00 ")
+
+    def handle_endtag(self, tag):
+        if tag in ("style", "script", "title", "head"):
+            self.ignorieren = max(0, self.ignorieren - 1)
+        elif tag == "table":
+            self.in_tabelle -= 1
+            if not self.in_tabelle:
+                self.teile.append(" \x00TABELLE_ENDE\x00 ")
+
+    def handle_data(self, data):
+        if self.ignorieren or self.in_tabelle:
+            return
+        self.teile.append(data)
+
+    def abfolge(self):
+        return norm(" ".join(self.teile))
+
+
+class Reihenfolge(SeitenTest):
+    """Paket 5c: Titel, Portionen, Tabelle, Allergen-Hinweis (mit
+    Unvollständigkeitshinweis), danach Quelle (falls vorhanden)."""
+
+    def abfolge(self):
+        p = Abfolgeleser()
+        p.feed(self.html)
+        p.close()
+        return p.abfolge()
+
+    def pos(self, text, gesucht):
+        i = text.find(gesucht)
+        self.assertNotEqual(i, -1, f"{gesucht!r} nicht im Body gefunden: {text!r}")
+        return i
+
+    def pruefe(self):
+        text = self.abfolge()
+        h1 = self.pos(text, "\x00H1\x00")
+        titel = self.pos(text, self.rezept["titel"])
+        portionen = self.pos(text, norm(self.rezept["portionen"]))
+        tab_start = self.pos(text, "\x00TABELLE_START\x00")
+        tab_ende = self.pos(text, "\x00TABELLE_ENDE\x00")
+        self.assertLess(h1, titel)
+        self.assertLess(titel, portionen, "Portionen stehen vor dem Titel")
+        self.assertLess(portionen, tab_start, "Portionen stehen nicht vor der Tabelle")
+        hinweis = ["Allergen", "Spuren", "Gewähr"] + list(self.rezept["allergene"])
+        hinweis_pos = {}
+        for wort in hinweis:
+            with self.subTest(wort=wort):
+                hinweis_pos[wort] = self.pos(text, wort)
+                self.assertGreater(hinweis_pos[wort], tab_ende,
+                                   f"{wort!r} steht vor bzw. über der Tabelle")
+        return text, hinweis_pos
+
+    def test_reihenfolge(self):
+        self.pruefe()
+
+
+class ReihenfolgeMitQuelle(Reihenfolge):
+    rezept_name = "mit_quelle.json"
+
+    def test_quelle_nach_allergen_hinweis(self):
+        text, hinweis_pos = self.pruefe()
+        quelle_text = self.pos(text, "Quelle")
+        link = self.pos(text, "\x00LINK:" + self.rezept["quelle"] + "\x00")
+        letzter_hinweis = max(hinweis_pos.values())
+        self.assertGreater(quelle_text, letzter_hinweis,
+                           "Quelle steht nicht nach dem Allergen-Hinweis")
+        self.assertGreater(link, letzter_hinweis,
+                           "Quellen-Link steht nicht nach dem Allergen-Hinweis")
 
 
 class Deutsch(SeitenTest):

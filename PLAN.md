@@ -84,9 +84,9 @@ Abnahmekriterien:
 Wunsch von Michi (22.10.).
 
 Abnahmekriterien:
-- [ ] Senkrechte Schrittzellen werden von oben nach unten gelesen (`writing-mode: vertical-rl` ohne Drehung um 180°). Ersetzt die Vorgabe "von unten nach oben" aus Paket 5b.
-- [ ] Reihenfolge auf der Rezeptseite: Titel, Portionen, Tabelle, danach Allergen-Hinweis mit Unvollständigkeitshinweis, danach Quelle (falls vorhanden).
-- [ ] Alle übrigen Kriterien aus Paket 3 und 5b bleiben erfüllt.
+- [x] Senkrechte Schrittzellen werden von oben nach unten gelesen (`writing-mode: vertical-rl` ohne Drehung um 180°). Ersetzt die Vorgabe "von unten nach oben" aus Paket 5b.
+- [x] Reihenfolge auf der Rezeptseite: Titel, Portionen, Tabelle, danach Allergen-Hinweis mit Unvollständigkeitshinweis, danach Quelle (falls vorhanden).
+- [x] Alle übrigen Kriterien aus Paket 3 und 5b bleiben erfüllt.
 
 ## Paket 6: Veröffentlichung und echter Durchlauf
 

@@ -3,6 +3,8 @@
 Stand: 22.10.2026, Kartentext unverändert übernommen.
 Trello: https://trello.com/c/tl1JPys8/23-rezept-graph-rezeptseiten-auf-github-pages
 
+Spätere Änderungen durch Michi stehen in `PLAN.md` (Entscheidungen, Pakete 5b und 5c) und gehen diesem Text vor, u.a.: senkrechte Schrittzellen von oben nach unten; Allergen-Hinweis und Quelle unter der Tabelle.
+
 ---
 
 Projekt: Sonstiges (Code). Erster Test der Umsetzungs-Pipeline (Coding, Review, Testing).
