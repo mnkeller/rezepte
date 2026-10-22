@@ -69,6 +69,16 @@ Abnahmekriterien:
 - [x] `python3 preview.py rezepte/<datei>.json` validiert die Datei und erzeugt eine lokale Vorschauseite, deren Pfad ausgegeben wird; Allergene werden in der Konsole aufgelistet.
 - [x] Anleitung in `CLAUDE.md`: Foto lesen, JSON nach Format schreiben, Allergene ableiten, nach Quelle fragen falls nicht im Foto, Vorschau zeigen, erst nach Bestätigung bauen und committen.
 
+## Paket 5b: Schmalere Tabelle (senkrechte Schrittzellen)
+
+Wunsch von Michi (22.10.): Die Tabelle muss schmaler werden, Schritte senkrecht schreiben.
+
+Abnahmekriterien:
+- [ ] Schrittzellen mit genug Höhe werden senkrecht geschrieben (von unten nach oben lesbar, wie Spaltenköpfe). Regel: senkrecht, wenn die Zelle mindestens 3 Zeilen überspannt; kürzere Schrittzellen bleiben waagrecht. Die Regel steht in der Seite als Klasse (z.B. `td.schritt.senkrecht`), damit sie testbar ist.
+- [ ] Senkrechte Zellen sind schmal: Text darf innerhalb der Zelle in mehrere senkrechte Zeilen umbrechen, wenn er länger als die Zellhöhe ist; die Tabelle wird dadurch nicht höher als nötig.
+- [ ] Zellstruktur, Rahmen und alle übrigen Kriterien aus Paket 3 bleiben erfüllt.
+- [ ] Review: Screenshot der Brownie-Seite und des Karottenkuchens bei 1000 px – die Tabelle ist deutlich schmaler als vorher, alle Linien schließen sauber, Text gut lesbar.
+
 ## Paket 6: Veröffentlichung und echter Durchlauf
 
 Inhalt: Push, GitHub Pages aus `main` / `docs`, ein echtes Rezept per Foto.

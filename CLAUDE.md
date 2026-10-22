@@ -32,14 +32,14 @@ Ablauf, wenn Michi ein Foto oder einen Screenshot eines Rezepts liefert:
    - Stückzutaten bleiben Stück ("2 Eier", nicht in g umrechnen): menge "2", einheit "", name "Eier".
    - Zutaten in der Reihenfolge, in der sie verarbeitet werden.
    - Vorheizen und Form vorbereiten gehören nach `vorbereitung`, nicht in die Schritte.
-2. Schritte als Baum: kurze Verben in den Schrittzellen (z.B. "schmelzen", "verrühren", "backen 170 °C, 30 min"). Aufgeteilte Zutaten ("Hälfte jetzt, Hälfte später") als zwei Zutatenzeilen. Zwischenprodukte dürfen nicht aufgeteilt werden – verlangt das Rezept das, Michi fragen.
+2. Schritte als Baum: kurze Verben in den Schrittzellen (z.B. "schmelzen", "verrühren", "backen 170 °C, 30 min"). Aufgeteilte Zutaten ("Hälfte jetzt, Hälfte später") als zwei Zutatenzeilen. Zwischenprodukte dürfen nicht aufgeteilt werden – verlangt das Rezept das, Michi fragen. Warte- und Kühlzeiten sind eigene Schritte (z.B. "vollständig auskühlen lassen" vor dem Bestreichen, "kühl stellen, bis die Creme fest ist" danach) – auf die zeitliche Logik achten, nicht nur auf die Zutaten.
 3. Allergene aus den Zutaten ableiten (14 EU-Hauptallergene, Schreibweise aus FORMAT.md). Im Zweifel aufnehmen und Michi darauf hinweisen.
 4. Quelle: Link eintragen. Steht keiner im Foto, Michi danach fragen. Gibt es keine Quelle (z.B. Kochbuch ohne Link), das Feld `quelle` weglassen.
 5. `python3 preview.py rezepte/<slug>.json` ausführen. Schlägt das fehl, JSON nach der Meldung korrigieren und erneut ausführen.
    Screenshot der Vorschau erstellen (`<tmp>` = Scratchpad/Temp-Ordner, `<pfad>` = von preview.py ausgegebener Pfad; `timeout` gibt es auf dem Mac nicht, daher `perl -e 'alarm 60; ...'`):
 
    ```
-   perl -e 'alarm 60; exec @ARGV' "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --user-data-dir=<tmp>/chrome --window-size=1200,900 --screenshot=<tmp>/vorschau.png file://<pfad>
+   perl -e 'alarm 60; exec @ARGV' "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --use-mock-keychain --user-data-dir=<tmp>/chrome --window-size=1200,900 --screenshot=<tmp>/vorschau.png file://<pfad>
    ```
 
    Das PNG selbst ansehen und gegen das Foto prüfen (Zutaten, Mengen, Baumstruktur), Fehler vorher beheben. Dann Michi den Screenshot (oder Pfad) und die Allergene zeigen und auf Bestätigung warten.
