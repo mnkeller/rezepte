@@ -161,6 +161,29 @@ def zellen_aus_tabelle(zeilen):
     return sorted(ergebnis, key=lambda z: (z["zeile"], z["spalte"]))
 
 
+def zell_klassen(z):
+    return (z["attrs"].get("class") or "").split()
+
+
+def zellen_mit_klassen(zeilen):
+    """Wie zellen_aus_tabelle, zusätzlich mit den Klassen jeder Zelle."""
+    belegt = set()
+    ergebnis = []
+    for r, zeile in enumerate(zeilen):
+        c = 0
+        for z in zeile:
+            while (r, c) in belegt:
+                c += 1
+            for dr in range(z["rowspan"]):
+                for dc in range(z["colspan"]):
+                    belegt.add((r + dr, c + dc))
+            ergebnis.append({"zeile": r, "spalte": c, "rowspan": z["rowspan"],
+                             "inhalt": norm("".join(z["text"])),
+                             "klassen": set(zell_klassen(z))})
+            c += z["colspan"]
+    return ergebnis
+
+
 def css_regeln(css):
     """Liefert (selektor, {eigenschaft: wert}) für alle innersten Regeln."""
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
@@ -188,13 +211,42 @@ def selektor_trifft_tag(selektor, tag):
     """True, wenn eine der Komma-Alternativen auf das Element `tag` endet."""
     for alt in selektor.split(","):
         letztes = re.split(r"[\s>+~]+", alt.strip())[-1]
-        if re.fullmatch(rf"{tag}(\.[\w-]+|#[\w-]+|:[\w-]+)*", letztes, flags=re.I):
+        if re.fullmatch(rf"{re.escape(tag)}(\.[\w-]+|#[\w-]+|:[\w-]+)*", letztes, flags=re.I):
             return True
     return False
 
 
 def selektor_erwaehnt(selektor, token):
-    return re.search(rf"(?<![\w-]){re.escape(token)}(?![\w-])", selektor) is not None
+    """True, wenn `token` (Klasse `.x`, ID `#x` oder Elementname) im Selektor vorkommt.
+    Klassen/IDs duerfen direkt an einem Elementnamen oder einer anderen Klasse haengen
+    (`td.senkrecht`, `.a.senkrecht`); Elementnamen muessen frei stehen."""
+    vorne = "" if token[:1] in ".#" else r"(?<![\w.#-])"
+    return re.search(rf"{vorne}{re.escape(token)}(?![\w-])", selektor) is not None
+
+
+def ohne_not(selektor):
+    """Entfernt `:not(...)`-Teile; was darin steht, schränkt nicht ein."""
+    vorher = None
+    while vorher != selektor:
+        vorher = selektor
+        selektor = re.sub(r":not\([^()]*\)", "", selektor, flags=re.I)
+    return selektor
+
+
+def eingeschraenkt_auf(selektor, token):
+    """True, wenn `token` im Selektor außerhalb von `:not(...)` vorkommt."""
+    return selektor_erwaehnt(ohne_not(selektor), token)
+
+
+def child_elemente(p, attrs):
+    """Direkte Kindelemente des Elements mit genau diesem attrs-Objekt."""
+    return [(t, a) for t, a, vorfahren in p.elemente
+            if vorfahren and vorfahren[-1][1] is attrs]
+
+
+def rem_wert(wert):
+    m = re.fullmatch(r"\s*([0-9]*\.?[0-9]+)\s*rem\s*(!important)?\s*", wert or "")
+    return float(m.group(1)) if m else None
 
 
 def rahmen_entfernt(decl):
@@ -221,6 +273,50 @@ def voller_rahmen(decl):
         return True
     return all(sichtbar(decl.get(f"border-{s}"))
                for s in ("top", "right", "bottom", "left"))
+
+
+class Hilfsfunktionen(unittest.TestCase):
+    """Selbsttests fuer die Selektor-Helfer dieser Testdatei."""
+
+    def test_trifft_tag(self):
+        self.assertTrue(selektor_trifft_tag("td", "td"))
+        self.assertTrue(selektor_trifft_tag("table td", "td"))
+        self.assertTrue(selektor_trifft_tag("td.senkrecht", "td"))
+        self.assertTrue(selektor_trifft_tag("th, td", "td"))
+        self.assertTrue(selektor_trifft_tag("*", "*"))
+        self.assertTrue(selektor_trifft_tag("table *", "*"))
+        self.assertFalse(selektor_trifft_tag("table td", "table"))
+        self.assertFalse(selektor_trifft_tag(".senkrecht > span", "td"))
+        self.assertFalse(selektor_trifft_tag("td", "*"))
+        self.assertFalse(selektor_trifft_tag("tdx", "td"))
+
+    def test_trifft_tag_ohne_regexfehler(self):
+        for sel in (".senkrecht", ".senkrecht > span", "*", "a:hover", "#x"):
+            for tag in ("table", "tr", "td", "th", "*"):
+                selektor_trifft_tag(sel, tag)
+
+    def test_erwaehnt(self):
+        self.assertTrue(selektor_erwaehnt("td.senkrecht", ".senkrecht"))
+        self.assertTrue(selektor_erwaehnt(".senkrecht", ".senkrecht"))
+        self.assertTrue(selektor_erwaehnt(".senkrecht > span", ".senkrecht"))
+        self.assertTrue(selektor_erwaehnt("table td.a.senkrecht", ".senkrecht"))
+        self.assertTrue(selektor_erwaehnt("div#rezept td", "#rezept"))
+        self.assertFalse(selektor_erwaehnt(".senkrecht-x", ".senkrecht"))
+        self.assertFalse(selektor_erwaehnt(".nicht-senkrecht", ".senkrecht"))
+        self.assertFalse(selektor_erwaehnt("table td", ".senkrecht"))
+        self.assertFalse(selektor_erwaehnt("*", ".senkrecht"))
+        self.assertFalse(selektor_erwaehnt(".tdx", "td"))
+
+    def test_eingeschraenkt_mit_not(self):
+        self.assertTrue(eingeschraenkt_auf("td.senkrecht", ".senkrecht"))
+        self.assertTrue(eingeschraenkt_auf(".senkrecht > span", ".senkrecht"))
+        self.assertTrue(eingeschraenkt_auf(".senkrecht:not(.x)", ".senkrecht"))
+        self.assertTrue(eingeschraenkt_auf("td:not(.a) .senkrecht", ".senkrecht"))
+        self.assertFalse(eingeschraenkt_auf("td:not(.senkrecht)", ".senkrecht"))
+        self.assertFalse(eingeschraenkt_auf("td:NOT(.senkrecht)", ".senkrecht"))
+        self.assertFalse(eingeschraenkt_auf(".schritt:not(td.senkrecht) span", ".senkrecht"))
+        self.assertFalse(eingeschraenkt_auf("table td", ".senkrecht"))
+        self.assertEqual(ohne_not("td:not(.senkrecht)"), "td")
 
 
 class SeitenTest(unittest.TestCase):
@@ -384,6 +480,144 @@ class Mobil(SeitenTest):
                    if d.get("white-space") in ("nowrap", "pre")
                    and any(selektor_trifft_tag(s, t) for t in ("table", "tr") + ZELL_TAGS)]
         self.assertTrue(treffer, "keine Regel white-space: nowrap für die Tabelle")
+
+    def test_umbruch_nur_in_senkrechten_zellen(self):
+        """Paket 5b: Ausnahme vom Nicht-Umbrechen gilt nur für .senkrecht.
+
+        Jede Regel, die in der Tabelle Umbruch erlaubt, muss auf .senkrecht
+        eingeschränkt sein; nicht senkrechte Zellen setzen kein Umbrechen inline.
+        """
+        klassen, ids = set(), set()
+        for zeile in self.p.zeilen:
+            for z in zeile:
+                klassen.update(zell_klassen(z))
+                if z["attrs"].get("id"):
+                    ids.add(z["attrs"]["id"])
+                if "senkrecht" in zell_klassen(z):
+                    continue
+                with self.subTest(zelle=z["text"]):
+                    ws = inline_decl(z["attrs"].get("style")).get("white-space")
+                    self.assertIn(ws, (None, "nowrap", "pre"), z["attrs"])
+        for s, d in self.regeln:
+            ws = d.get("white-space")
+            if ws is None or ws in ("nowrap", "pre"):
+                continue
+            for alt in s.split(","):
+                betrifft = (any(selektor_trifft_tag(alt, t) or selektor_trifft_tag(ohne_not(alt), t)
+                                for t in ("table", "tr", "*") + ZELL_TAGS)
+                            or any(selektor_erwaehnt(alt, "." + k) for k in klassen)
+                            or any(selektor_erwaehnt(alt, "#" + i) for i in ids))
+                if betrifft:
+                    with self.subTest(selektor=alt):
+                        self.assertTrue(eingeschraenkt_auf(alt, ".senkrecht"),
+                                        f"Regel erlaubt Umbruch außerhalb von .senkrecht: {alt} {d}")
+
+
+class Senkrecht(SeitenTest):
+    """Paket 5b: Schrittzellen ab 3 Zeilen Höhe senkrecht."""
+
+    def pruefe_klassen(self, rezept, zeilen):
+        n_vorb = len(rezept["vorbereitung"])
+        zellen = zellen_mit_klassen(zeilen)
+        self.assertTrue(zellen)
+        for z in zellen:
+            with self.subTest(zelle=z["inhalt"], zeile=z["zeile"], spalte=z["spalte"]):
+                ist_schritt = z["zeile"] >= n_vorb and z["spalte"] > 0 and z["inhalt"] != ""
+                if ist_schritt:
+                    self.assertIn("schritt", z["klassen"])
+                    if z["rowspan"] >= 3:
+                        self.assertIn("senkrecht", z["klassen"])
+                    else:
+                        self.assertNotIn("senkrecht", z["klassen"])
+                else:
+                    self.assertNotIn("senkrecht", z["klassen"])
+
+    def test_regel_brownies(self):
+        self.pruefe_klassen(self.rezept, self.p.zeilen)
+
+    def test_regel_aufgeteilt(self):
+        r = fixture("aufgeteilt.json")
+        self.pruefe_klassen(r, einlesen(rezeptgraph.seite(copy.deepcopy(r))).zeilen)
+
+    def test_regel_mit_quelle(self):
+        r = fixture("mit_quelle.json")
+        self.pruefe_klassen(r, einlesen(rezeptgraph.seite(copy.deepcopy(r))).zeilen)
+
+    def test_brownies_konkret(self):
+        schritte = [(z["inhalt"], "senkrecht" in z["klassen"])
+                    for z in zellen_mit_klassen(self.p.zeilen) if "schritt" in z["klassen"]]
+        self.assertEqual(schritte, [("melt", False), ("mix", True), ("mix", True),
+                                    ("fold in", True), ("bake 170 °C 30 to 40 min", True)])
+
+    def senkrecht_regeln(self):
+        return [(s, d) for s, d in self.regeln if selektor_erwaehnt(s, ".senkrecht")]
+
+    def test_css_schreibrichtung_von_unten_nach_oben(self):
+        regeln = self.senkrecht_regeln()
+        self.assertTrue(regeln, "keine CSS-Regel für .senkrecht")
+        modi = {d.get("writing-mode") for _, d in regeln} - {None}
+        transforms = " ".join(d.get("transform", "") for _, d in regeln).replace(" ", "")
+        if "sideways-lr" in modi:
+            return
+        self.assertTrue(modi & {"vertical-rl", "vertical-lr"},
+                        f"keine senkrechte Schreibrichtung für .senkrecht: {regeln}")
+        self.assertRegex(transforms, r"rotate\((180deg|-180deg|0?\.5turn|-0?\.5turn)\)",
+                         "senkrechter Text nicht von unten nach oben lesbar (rotate(180deg) fehlt)")
+
+    def test_css_senkrechte_zellen_brechen_um(self):
+        regeln = self.senkrecht_regeln()
+        self.assertTrue(regeln, "keine CSS-Regel für .senkrecht")
+        werte = [d.get("white-space") for _, d in regeln if "white-space" in d]
+        self.assertIn("normal", werte, "für .senkrecht fehlt white-space: normal")
+        for w in werte:
+            self.assertNotIn(w, ("nowrap", "pre"))
+
+    def test_css_lange_woerter_bleiben_in_der_zelle(self):
+        """Muss: Lange Wörter umbrechen statt aus der senkrechten Zelle zu laufen."""
+        regeln = [(s, d) for s, d in self.regeln
+                  if any(eingeschraenkt_auf(alt, ".senkrecht") for alt in s.split(","))]
+        self.assertTrue(regeln, "keine CSS-Regel für .senkrecht")
+        umbruch = [s for s, d in regeln
+                   if d.get("overflow-wrap") == "anywhere"
+                   or d.get("word-break") in ("break-word", "break-all")]
+        self.assertTrue(umbruch, "für .senkrecht fehlt overflow-wrap: anywhere "
+                                 f"(oder word-break: break-word/break-all): {regeln}")
+        trennung = [s for s, d in regeln if d.get("hyphens") == "auto"]
+        self.assertTrue(trennung, f"für .senkrecht fehlt hyphens: auto: {regeln}")
+
+    def pruefe_max_height(self, p):
+        werte = []
+        for zeile in p.zeilen:
+            for z in zeile:
+                if "senkrecht" not in zell_klassen(z):
+                    continue
+                kinder = child_elemente(p, z["attrs"])
+                with self.subTest(zelle=norm("".join(z["text"])), rowspan=z["rowspan"]):
+                    self.assertEqual(len(kinder), 1, f"nicht genau ein Kindelement: {kinder}")
+                    mh = inline_decl(kinder[0][1].get("style")).get("max-height")
+                    self.assertIsNotNone(mh, f"Kindelement ohne max-height: {kinder[0]}")
+                    rem = rem_wert(mh)
+                    self.assertIsNotNone(rem, f"max-height nicht in rem: {mh}")
+                    self.assertLess(rem, z["rowspan"] * 2.2)
+                    werte.append((z["rowspan"], rem))
+        return werte
+
+    def test_max_height_brownies(self):
+        """Sollte: max-height wächst streng monoton mit rowspan (Brownies: 4, 5, 9)."""
+        werte = self.pruefe_max_height(self.p)
+        self.assertEqual(sorted({r for r, _ in werte}), [4, 5, 9])
+        for r1, m1 in werte:
+            for r2, m2 in werte:
+                if r1 < r2:
+                    self.assertLess(m1, m2, f"rowspan {r1}: {m1}rem, rowspan {r2}: {m2}rem")
+                elif r1 == r2:
+                    self.assertEqual(m1, m2, f"rowspan {r1}: {m1}rem vs. {m2}rem")
+
+    def test_max_height_weitere_fixtures(self):
+        for name in ("aufgeteilt.json", "mit_quelle.json"):
+            with self.subTest(fixture=name):
+                p = einlesen(rezeptgraph.seite(fixture(name)))
+                self.pruefe_max_height(p)
 
 
 class Deutsch(SeitenTest):

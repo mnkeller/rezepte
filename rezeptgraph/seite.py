@@ -18,17 +18,31 @@ table { border-collapse: collapse; border: 3px solid #1e8c2e; white-space: nowra
 td { border: 2px solid #1e8c2e; padding: .3rem .6rem; white-space: nowrap;
   text-align: center; vertical-align: middle; }
 td.zutat { text-align: left; }
+td.senkrecht { padding: .3rem .2rem; }
+.senkrecht > span { display: inline-block; writing-mode: vertical-rl;
+  transform: rotate(180deg); white-space: normal; text-align: center;
+  overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
 .quelle { font-size: .9rem; word-break: break-all; }
 """
 
+# Angenommene Höhe einer Tabellenzeile in rem: Padding .3rem oben und unten,
+# eine Textzeile (line-height 1.4 bei 1rem) und der Rahmen. Daraus wird die
+# max-height senkrechter Texte berechnet, damit sie umbrechen, statt die
+# Tabelle zu strecken.
+ZEILENHOEHE_REM = 2.1
+# Abzug für Padding und Rahmen der senkrechten Zelle selbst.
+SENKRECHT_ABZUG_REM = 0.8
+
 
 def _zelle(z, n_vorbereitung):
+    senkrecht = False
     if z["zeile"] < n_vorbereitung:
         klasse = "vorbereitung"
     elif z["spalte"] == 0:
         klasse = "zutat"
     elif z["inhalt"]:
-        klasse = "schritt"
+        senkrecht = z["rowspan"] >= 3
+        klasse = "schritt senkrecht" if senkrecht else "schritt"
     else:
         klasse = "leer"
     attrs = f' class="{klasse}"'
@@ -36,7 +50,11 @@ def _zelle(z, n_vorbereitung):
         attrs += f' rowspan="{z["rowspan"]}"'
     if z["colspan"] > 1:
         attrs += f' colspan="{z["colspan"]}"'
-    return f"<td{attrs}>{escape(z['inhalt'])}</td>"
+    inhalt = escape(z["inhalt"])
+    if senkrecht:
+        hoehe = z["rowspan"] * ZEILENHOEHE_REM - SENKRECHT_ABZUG_REM
+        inhalt = f'<span style="max-height: {hoehe:.1f}rem">{inhalt}</span>'
+    return f"<td{attrs}>{inhalt}</td>"
 
 
 def _tabelle(rezept):

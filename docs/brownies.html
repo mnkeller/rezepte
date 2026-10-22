@@ -17,6 +17,10 @@ table { border-collapse: collapse; border: 3px solid #1e8c2e; white-space: nowra
 td { border: 2px solid #1e8c2e; padding: .3rem .6rem; white-space: nowrap;
   text-align: center; vertical-align: middle; }
 td.zutat { text-align: left; }
+td.senkrecht { padding: .3rem .2rem; }
+.senkrecht > span { display: inline-block; writing-mode: vertical-rl;
+  transform: rotate(180deg); white-space: normal; text-align: center;
+  overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
 .quelle { font-size: .9rem; word-break: break-all; }
 </style>
 </head>
@@ -31,7 +35,7 @@ td.zutat { text-align: left; }
 <table>
 <tr><td class="vorbereitung" colspan="6">Form (20 × 20 cm) fetten und mit Mehl bestäuben</td></tr>
 <tr><td class="vorbereitung" colspan="6">Ofen auf 170 °C vorheizen</td></tr>
-<tr><td class="zutat">115 g ungesalzene Butter</td><td class="schritt">schmelzen</td><td class="schritt" rowspan="4">verrühren</td><td class="schritt" rowspan="5">verrühren</td><td class="schritt" rowspan="9">unterheben</td><td class="schritt" rowspan="9">backen 170 °C, 30–40 min</td></tr>
+<tr><td class="zutat">115 g ungesalzene Butter</td><td class="schritt">schmelzen</td><td class="schritt senkrecht" rowspan="4"><span style="max-height: 7.6rem">verrühren</span></td><td class="schritt senkrecht" rowspan="5"><span style="max-height: 9.7rem">verrühren</span></td><td class="schritt senkrecht" rowspan="9"><span style="max-height: 18.1rem">unterheben</span></td><td class="schritt senkrecht" rowspan="9"><span style="max-height: 18.1rem">backen 170 °C, 30–40 min</span></td></tr>
 <tr><td class="zutat">200 g Zucker</td><td class="leer" rowspan="3"></td></tr>
 <tr><td class="zutat">2,5 ml Vanilleextrakt</td></tr>
 <tr><td class="zutat">60 ml frisch gebrühter Espresso oder sehr starker Kaffee</td></tr>

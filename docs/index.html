@@ -17,6 +17,10 @@ table { border-collapse: collapse; border: 3px solid #1e8c2e; white-space: nowra
 td { border: 2px solid #1e8c2e; padding: .3rem .6rem; white-space: nowrap;
   text-align: center; vertical-align: middle; }
 td.zutat { text-align: left; }
+td.senkrecht { padding: .3rem .2rem; }
+.senkrecht > span { display: inline-block; writing-mode: vertical-rl;
+  transform: rotate(180deg); white-space: normal; text-align: center;
+  overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
 .quelle { font-size: .9rem; word-break: break-all; }
 </style>
 </head>
