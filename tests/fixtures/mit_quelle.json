@@ -1,0 +1,17 @@
+{
+  "titel": "Pfannkuchen",
+  "portionen": "4",
+  "quelle": "https://example.org/rezepte/pfannkuchen?sorte=klassisch&groesse=gross",
+  "vorbereitung": ["Pfanne erhitzen"],
+  "zutaten": [
+    {"id": "mehl", "menge": "200", "einheit": "g", "name": "Weizenmehl"},
+    {"id": "milch", "menge": "300", "einheit": "ml", "name": "Milch"},
+    {"id": "eier", "menge": "2", "einheit": "", "name": "Eier"},
+    {"id": "senf", "menge": "1", "einheit": "TL", "name": "Senf"}
+  ],
+  "schritte": [
+    {"id": "ruehren", "text": "verrühren", "eingaenge": ["mehl", "milch", "eier"]},
+    {"id": "backen", "text": "ausbacken", "eingaenge": ["ruehren", "senf"]}
+  ],
+  "allergene": ["Glutenhaltiges Getreide", "Milch", "Eier", "Senf"]
+}

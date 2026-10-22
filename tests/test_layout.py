@@ -73,8 +73,9 @@ def verschachtelt():
 
 
 def ein_ausreisser():
-    """a1 a2 a3 b a4: nur a4 steht falsch. Einzige Umsortierung, die die
-    Reihenfolge so weit wie möglich erhält: b ans Ende (bzw. a4 vor b)."""
+    """a1 a2 a3 b a4: nur a4 steht falsch. Laut PLAN.md erscheinen die
+    Teilbäume in der Reihenfolge ihres ersten Auftretens: erst der Teilbaum
+    von "sa" (a1..a4), dann b."""
     return {
         "titel": "Ausreißer",
         "portionen": "1",
@@ -213,8 +214,8 @@ class Brownies(RasterPruefung):
         kopf = sorted((z for z in self.zellen
                        if z["zeile"] == erste_zutatenzeile and z["spalte"] > 0),
                       key=lambda z: z["spalte"])
-        self.assertEqual([z["inhalt"].split(" 170")[0] for z in kopf],
-                         ["melt", "mix", "mix", "fold in", "bake"])
+        self.assertEqual([z["inhalt"] for z in kopf],
+                         ["melt", "mix", "mix", "fold in", "bake 170 °C 30 to 40 min"])
         self.assertEqual([z["spalte"] for z in kopf], [1, 2, 3, 4, 5])
 
     def test_leere_zellen(self):
@@ -292,6 +293,27 @@ class Basis(RasterPruefung):
         ])
 
 
+class UngueltigesRezept(unittest.TestCase):
+    def test_nicht_baum_wirft_rezeptfehler(self):
+        r = basis()
+        # Zwischenprodukt "ruehren" geht in zwei Schritte ein.
+        r["schritte"].append({"id": "extra", "text": "extra", "eingaenge": ["ruehren"]})
+        with self.assertRaises(rezeptgraph.RezeptFehler):
+            rezeptgraph.layout(r)
+
+    def test_unbekannter_eingang_wirft_rezeptfehler(self):
+        r = basis()
+        r["schritte"][1]["eingaenge"].append("gibtsnicht")
+        with self.assertRaises(rezeptgraph.RezeptFehler):
+            rezeptgraph.layout(r)
+
+    def test_fehlendes_pflichtfeld_wirft_rezeptfehler(self):
+        r = basis()
+        del r["schritte"]
+        with self.assertRaises(rezeptgraph.RezeptFehler):
+            rezeptgraph.layout(r)
+
+
 class AufgeteilteZutat(RasterPruefung):
     def test_lueckenlos(self):
         r = fixture("aufgeteilt.json")
@@ -335,7 +357,7 @@ class Umsortieren(RasterPruefung):
         r["zutaten"].insert(5, eier)
         self.pruefe_raster(r)
 
-    def test_ein_ausreisser_minimal_umsortiert(self):
+    def test_ein_ausreisser_reihenfolge_erstes_auftreten(self):
         r = ein_ausreisser()
         reihenfolge = self.pruefe_raster(r)
         self.assertEqual(reihenfolge, ["a1", "a2", "a3", "a4", "b"])

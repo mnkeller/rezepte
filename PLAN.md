@@ -44,12 +44,12 @@ Abnahmekriterien:
 Inhalt: Aus Rezept und Raster eine eigenständige HTML-Seite erzeugen.
 
 Abnahmekriterien:
-- [ ] Die HTML-Tabelle, wieder eingelesen, ergibt genau die Zellstruktur aus der Fixture (Zeile, Spalte, rowspan, colspan, Inhalt).
-- [ ] Jede Zelle, auch jede leere, hat einen vollen Rahmen (`border-collapse`, Rahmen an allen `td`).
-- [ ] Seite enthält Titel, Allergen-Hinweis (aus der JSON), Hinweis auf Unvollständigkeit (Spuren und Herstellerangaben nicht erfasst, keine Gewähr), Tabelle, Quelle als Link (wenn vorhanden; fehlt sie, kein leerer Quellenabschnitt).
-- [ ] Mobil: Tabelle in einem horizontal scrollbaren Container, Zeilen brechen nicht um, `viewport`-Meta gesetzt.
-- [ ] Seitentexte auf Deutsch.
-- [ ] Review: Screenshot der Brownie-Seite sieht strukturell aus wie `vorlage/brownies.png`.
+- [x] Die HTML-Tabelle, wieder eingelesen, ergibt genau die Zellstruktur aus der Fixture (Zeile, Spalte, rowspan, colspan, Inhalt).
+- [x] Jede Zelle, auch jede leere, hat einen vollen Rahmen (`border-collapse`, Rahmen an allen `td`).
+- [x] Seite enthält Titel, Allergen-Hinweis (aus der JSON), Hinweis auf Unvollständigkeit (Spuren und Herstellerangaben nicht erfasst, keine Gewähr), Tabelle, Quelle als Link (wenn vorhanden; fehlt sie, kein leerer Quellenabschnitt).
+- [x] Mobil: Tabelle in einem horizontal scrollbaren Container, Zeilen brechen nicht um, `viewport`-Meta gesetzt.
+- [x] Seitentexte auf Deutsch.
+- [x] Review: Screenshot der Brownie-Seite sieht strukturell aus wie `vorlage/brownies.png`.
 
 ## Paket 4: Startseite und Build
 

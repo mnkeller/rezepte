@@ -1,5 +1,7 @@
 """Zellraster eines Rezepts nach SPEC.md (LAYOUT-REGELN)."""
 
+from .validierung import validieren
+
 
 def _zutatentext(z):
     return " ".join(t for t in (z["menge"], z["einheit"], z["name"]) if t)
@@ -7,7 +9,9 @@ def _zutatentext(z):
 
 def layout(rezept):
     """Berechnet die Zellen {zeile, spalte, rowspan, colspan, inhalt} eines
-    gültigen Rezepts, sortiert nach (zeile, spalte). Verändert das Rezept nicht."""
+    Rezepts, sortiert nach (zeile, spalte). Verändert das Rezept nicht.
+    Ungültige Rezepte enden als RezeptFehler."""
+    validieren(rezept)
     zutaten = {z["id"]: z for z in rezept["zutaten"]}
     schritte = {s["id"]: s for s in rezept["schritte"]}
     position = {z["id"]: i for i, z in enumerate(rezept["zutaten"])}
