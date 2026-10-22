@@ -13,6 +13,7 @@ Abnahmekriterien:
 - [ ] Brownie-JSON wird als gültig geladen.
 - [ ] Nicht-Baum-Rezept (ein Zwischenprodukt geht in zwei Schritte ein) wird mit klarer Meldung abgelehnt.
 - [ ] Ebenso abgelehnt mit klarer Meldung: Zutat in zwei Schritten, Eingang verweist auf Unbekanntes, Pflichtfeld fehlt, Allergen nicht aus der EU-Liste der 14 Hauptallergene.
+- [ ] `FORMAT.md` beschreibt, wie eine aufgeteilte Zutat ("die Hälfte jetzt, die Hälfte später") erfasst wird: als zwei Zutatenzeilen mit je der Teilmenge. Ein Testrezept mit so einer aufgeteilten Zutat ist gültig.
 
 ## Paket 2: Layout (Zellraster)
 
@@ -24,6 +25,8 @@ Abnahmekriterien:
 - [ ] Leere Zellen: Zucker bis Espresso 1 Spalte × 3 Zeilen, Eier 2 Spalten × 1 Zeile, Mehl bis Salz 3 Spalten × 4 Zeilen.
 - [ ] Vorbereitungsschritte als Zeilen über volle Breite oben.
 - [ ] Das Raster ist lückenlos und überlappungsfrei: jede Position der Tabelle gehört zu genau einer Zelle.
+- [ ] Stehen die Zutaten eines Schritts in der JSON nicht direkt untereinander, wird das Rezept trotzdem dargestellt: Die Zutatenzeilen werden so umsortiert, dass jeder Teilbaum zusammenhängt, wobei die angegebene Reihenfolge so weit wie möglich erhalten bleibt. Bereits zusammenhängende Rezepte (Brownies) bleiben unverändert.
+- [ ] Ein Rezept mit aufgeteilter Zutat (zwei Teilmengen in verschiedenen Schritten) wird lückenlos dargestellt.
 
 ## Paket 3: Rezeptseite (HTML)
 
@@ -63,10 +66,17 @@ Abnahmekriterien:
 - [ ] Startseite und Brownie-Seite sind unter `https://mnkeller.github.io/rezepte/` erreichbar.
 - [ ] Ein echtes Rezept per Foto komplett durchgelaufen und online.
 
-Paket 6 braucht Michi (Pages aktivieren, Foto liefern, Freigabe zum Push).
+Paket 6 braucht Michi (`gh auth login`, Foto liefern, Freigabe zum Push). Pages wird danach per `gh` auf `main` / `docs` eingeschaltet.
+
+## Entscheidungen (Stopp 1, 22.10.)
+
+- `gh` wird installiert, Pages per `gh` aktivieren.
+- Nicht zusammenhängende Zutaten werden nicht abgelehnt, sondern umsortiert (Paket 2).
+- Aufgeteilte Zutaten ("Hälfte jetzt, Hälfte später") werden als zwei Zutatenzeilen erfasst. Abgelehnt wird nur, wenn ein Zwischenprodukt (Ergebnis eines Schritts) aufgeteilt wird.
+- Repo bleibt im Nextcloud-Ordner.
+- Foto für den echten Durchlauf liefert Michi.
 
 ## Annahmen
 
 - Die Brownie-Fixtures (Referenz-JSON und erwartete Zellen) schreibt der tester aus dem Bild und den Vorgaben in `SPEC.md`.
-- Die Zutaten eines Teilbaums müssen direkt untereinander stehen, sonst lässt sich ein Schritt nicht über zusammenhängende Zeilen spannen. Ein solches Rezept wird ebenfalls mit Meldung abgelehnt.
 - Die Allergene leitet Claude beim Einlesen ab und schreibt sie in die JSON. Das Render-Skript zeigt sie nur an.
