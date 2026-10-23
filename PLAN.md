@@ -109,6 +109,19 @@ Abnahmekriterien:
 - [x] Untertitel lautet "Zutaten, Schritte und Allergene auf einen Blick." und erwähnt keinen QR-Code.
 - [x] Übrige Kriterien aus Paket 5d bleiben erfüllt.
 
+## Paket 5f: Rezeptseiten im Look der Startseite, Zurück-Button, einheitlicher Look
+
+Wunsch von Michi (23.10.): Unterseiten im Stil der Startseite, Tabelle schwarz mit etwas dickeren Linien, Zurück-Button, und zukünftige Rezepte sollen immer in diesem Look erscheinen.
+
+Abnahmekriterien:
+- [ ] Rezeptseiten nutzen denselben Look wie die Startseite: gleiche Schriftfamilie (Plus Jakarta Sans zuerst, dann Systemschriften, nichts nachladen), Text #111 auf Weiß, Überschrift kräftig (800), kein Grün mehr. Gemeinsame Basis-Styles (Schrift, Farben, Seitenbreite, Link-Stil) stehen an EINER Stelle in `rezeptgraph/seite.py` und werden von Startseite und Rezeptseite gemeinsam verwendet.
+- [ ] Tabelle schwarz (#111): Zellrahmen mindestens 3px (bisher 2px), Außenrahmen mindestens so dick wie die Zellrahmen (bisher 3px, jetzt z.B. 4px). Weiterhin voller Rahmen an jeder Zelle, `border-collapse: collapse`, keine Zelle ohne Rahmen. Senkrechte Schrittzellen, Umbruchregeln, Scrollcontainer bleiben.
+- [ ] Hinweiskasten (Allergene, Unvollständigkeit) im neuen Look: schwarzer statt grüner Akzent, helle neutrale Fläche.
+- [ ] Zurück-Button oben auf der Rezeptseite, vor der Überschrift: Link auf `index.html` mit Text "← Alle Rezepte", als gut antippbarer Button (mind. 44px hoch, Rahmen, Hover/Fokus invertiert wie die Listeneinträge der Startseite). Der Link ist relativ (`index.html`), kein externer.
+- [ ] Reihenfolge bleibt: Zurück-Button, Titel, Portionen, Tabelle, Allergen-/Unvollständigkeitshinweis, Quelle. Quelle bleibt Link; ohne Quelle gibt es außer dem Zurück-Link keinen weiteren Link.
+- [ ] Einheitlicher Look für alle künftigen Rezepte: Es gibt keine Möglichkeit, Style im Rezept-JSON zu setzen (Format unverändert); jede Seite in `docs/` verwendet dieselben Basis-Styles. Ein Test prüft alle `docs/*.html` (auch künftige) auf die gemeinsamen Merkmale (Schriftfamilie, Textfarbe, kein Grün, Zurück-Link bzw. bei der Startseite Hinweis). `CLAUDE.md` hat einen Abschnitt "Look" mit der Regel: Aussehen steht allein in `rezeptgraph/seite.py`, `docs/` nie von Hand ändern, Änderungen am Look immer mit Tests und für alle Seiten.
+- [ ] Review: Screenshots von Brownies und Karottenkuchen bei 1000 px und 375 px (iframe); alle Linien schließen sauber; Zurück-Button sichtbar und bedienbar.
+
 ## Paket 6: Veröffentlichung und echter Durchlauf
 
 Inhalt: Push, GitHub Pages aus `main` / `docs`, ein echtes Rezept per Foto.
