@@ -474,12 +474,30 @@ class StartseitePaket5d(unittest.TestCase):
     def test_title_ist_genau_das_motto(self):
         self.assertEqual(norm("".join(self.p.title)), MOTTO)
 
-    # Rezeptseiten unverändert
+    # Rezeptseiten im selben Look (Paket 5f)
 
-    def test_rezeptseite_bleibt_gruen_ohne_motto(self):
+    def test_rezeptseite_ohne_gruen_mit_111_und_ohne_motto(self):
         html = rezeptgraph.seite(fixture("brownies.json"))
-        self.assertIn("#1e8c2e", html.lower())
+        low = html.lower()
+        self.assertNotIn("#1e8c2e", low)
+        self.assertNotRegex(low, r"\bgreen\b")
+        css = "\n".join(einlesen(html).css)
+        rs = regeln(css)
+        rahmen = [d for s, d in rs if s in ("table", "td") and "#111" in
+                  " ".join(v for k, v in d.items() if k.startswith("border"))]
+        self.assertEqual(len(rahmen), 2, "table und td brauchen einen #111-Rahmen")
+        grund = [d.get("color") for s, d in rs if s in GRUND]
+        self.assertTrue(any(farbe(c) == (0x11, 0x11, 0x11) for c in grund), grund)
         self.assertNotIn("weniger schwer", html)
+
+    def test_rezeptseite_und_startseite_teilen_schrift_und_textfarbe(self):
+        rez = einlesen(rezeptgraph.seite(fixture("brownies.json")))
+        fam = lambda p: {d["font-family"] for s, d in regeln("\n".join(p.css)) if s in GRUND and "font-family" in d}
+        col = lambda p: {d["color"] for s, d in regeln("\n".join(p.css)) if s in GRUND and "color" in d}
+        self.assertTrue(fam(self.p))
+        self.assertEqual(fam(rez), fam(self.p))
+        self.assertEqual(col(rez), col(self.p))
+        self.assertTrue(next(iter(fam(rez))).startswith('"plus jakarta sans"'))
 
 
 # --- Kriterium 3: ungültiges Rezept bricht ab, ziel bleibt unberührt

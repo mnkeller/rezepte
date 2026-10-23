@@ -22,6 +22,15 @@ Rezeptseiten im Stil von "Cooking for Engineers" aus einer JSON-Beschreibung pro
 - Das Render-Skript enthält keine KI. Der einzige KI-Schritt ist das Einlesen des Fotos in eine JSON-Datei.
 - Seiten auf Deutsch und metrisch.
 
+## Look
+
+- Das Aussehen aller Seiten steht allein in `rezeptgraph/seite.py` (gemeinsame Basis plus Startseite/Rezeptseite): weiß/schwarz, Plus Jakarta Sans mit Systemschrift-Fallback, Tabellenlinien schwarz (Zellen 3px, außen 4px), Zurück-Button oben auf jeder Rezeptseite.
+- Neue Rezepte sind nur JSON (`rezepte/*.json`, ohne Style-Felder) und bekommen den Look automatisch über `build.py`.
+- `docs/` wird nie von Hand geändert (erzeugt).
+- Änderungen am Look werden immer in `seite.py` gemacht, mit Tests (`tests/test_seite.py`, `tests/test_rezepte.py`), und gelten für alle Seiten.
+- Nach jeder Änderung am Look muss `python3 build.py` laufen, damit `docs/` mitzieht (sonst schlägt der Test fehl).
+- Die Entscheidungen zum Look stehen in `PLAN.md` (Paket 5f).
+
 ## Rezept einlesen
 
 Ablauf, wenn Michi ein Foto oder einen Screenshot eines Rezepts liefert:

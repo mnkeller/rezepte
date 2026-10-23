@@ -5,17 +5,32 @@ from html import escape
 from .layout import layout
 from .validierung import validieren
 
-CSS = """
-body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-  margin: 0 auto; padding: 1rem; max-width: 60rem; color: #222; line-height: 1.4; }
-h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
-.portionen { margin: 0 0 1rem; color: #555; }
-.hinweise { margin: 0 0 1rem; padding: .6rem .8rem; background: #f4f8f4;
-  border-left: 4px solid #1e8c2e; }
+# Gemeinsame Basis aller Seiten (Startseite und Rezeptseiten): Schrift, Farben,
+# Link-Stil. Das Aussehen steht allein hier und in den beiden CSS-Blöcken.
+BASIS_CSS = """
+*{box-sizing:border-box}
+html, body{margin:0;padding:0;background:#fff;color:#111;font-family:"Plus Jakarta Sans",ui-sans-serif,-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",sans-serif}
+a{color:#111}
+"""
+
+CSS = BASIS_CSS + """
+body { margin: 0 auto; padding: 1rem; max-width: 60rem; line-height: 1.4; }
+.zurueck { display: inline-flex; align-items: center; min-height: 44px;
+  margin: 0 0 1.25rem; padding: 0 1rem; border: 2px solid #111; font-weight: 600;
+  color: #111; text-decoration: none; }
+.zurueck:hover, .zurueck:focus-visible { background: #111; color: #fff;
+  outline: 3px solid #111; outline-offset: 2px; }
+h1 { margin: 0 0 .5rem; font-size: clamp(1.8rem, 5vw, 3rem); line-height: 1.1;
+  letter-spacing: -0.02em; font-weight: 800;
+  overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
+.portionen { margin: 0 0 1.25rem; color: #555; }
+.hinweise { margin: 0 0 1rem; padding: .6rem .8rem; background: #f5f5f5;
+  border-left: 4px solid #111; }
 .hinweise p { margin: .2rem 0; }
 .tabelle { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 0 1.25rem; }
-table { border-collapse: collapse; border: 3px solid #1e8c2e; white-space: nowrap; }
-td { border: 2px solid #1e8c2e; padding: .3rem .6rem; white-space: nowrap;
+.tabelle:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+table { border-collapse: collapse; border: 4px solid #111; white-space: nowrap; }
+td { border: 3px solid #111; padding: .3rem .6rem; white-space: nowrap;
   text-align: center; vertical-align: middle; }
 td.zutat { text-align: left; }
 td.senkrecht { padding: .3rem .2rem; }
@@ -23,6 +38,7 @@ td.senkrecht { padding: .3rem .2rem; }
   white-space: normal; text-align: center;
   overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
 .quelle { font-size: .9rem; word-break: break-all; }
+.quelle a { color: #111; text-decoration: underline; }
 """
 
 # Angenommene Höhe einer Tabellenzeile in rem: Padding .3rem oben und unten,
@@ -94,12 +110,13 @@ def seite(rezept):
         f"<style>{CSS}</style>",
         "</head>",
         "<body>",
+        '<a class="zurueck" href="index.html">← Alle Rezepte</a>',
         f"<h1>{titel}</h1>",
     ]
     if rezept["portionen"]:
         teile.append(f'<p class="portionen">Portionen: {escape(rezept["portionen"])}</p>')
     teile += [
-        f'<div class="tabelle">\n{tabelle}\n</div>',
+        f'<div class="tabelle" tabindex="0" role="region" aria-label="Rezepttabelle">\n{tabelle}\n</div>',
         '<div class="hinweise">',
         _allergen_hinweis(rezept["allergene"]),
         "<p>Abgeleitet aus den Zutaten. Spuren und Herstellerangaben sind nicht "
@@ -114,9 +131,7 @@ def seite(rezept):
     return "\n".join(teile)
 
 
-STARTSEITE_CSS = """
-*{box-sizing:border-box}
-html, body{margin:0;padding:0;background:#fff;color:#111;font-family:"Plus Jakarta Sans",ui-sans-serif,-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",sans-serif}
+STARTSEITE_CSS = BASIS_CSS + """
 body{padding:3rem 1rem 3rem;text-align:center;line-height:1.5}
 h1{margin:0 0 2rem;font-size:clamp(2.8rem,9vw,6rem);line-height:1;letter-spacing:-0.02em;font-weight:300}
 h1 strong{display:block;font-weight:800}

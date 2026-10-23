@@ -106,6 +106,88 @@ class DocsAktuell(unittest.TestCase):
                                 f"docs/{name} ist nicht aktuell (python3 build.py ausführen)")
 
 
+def doc_seiten():
+    return sorted(d for d in os.listdir(DOCS) if d.endswith(".html"))
+
+
+def gruen(css):
+    css = css.lower()
+    treffer = re.findall(r"\b(?:green|lime|olive|teal|darkgreen|lightgreen|seagreen|forestgreen)\b", css)
+    for h in re.findall(r"#(?:[0-9a-f]{6}|[0-9a-f]{3})\b", css):
+        h = h[1:]
+        if len(h) == 3:
+            h = "".join(c * 2 for c in h)
+        r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+        if g - max(r, b) >= 24:
+            treffer.append("#" + h)
+    return treffer
+
+
+FAMILIE = re.compile(r'font-family\s*:\s*"Plus Jakarta Sans"\s*,[^;}]*?(?:sans-serif|system-ui)\s*[;}]')
+
+
+class AlleSeitenInDocs(unittest.TestCase):
+    """Paket 5f: jede Seite in docs/ (auch künftige) hat den gemeinsamen Look."""
+
+    def test_es_gibt_seiten(self):
+        self.assertIn("index.html", doc_seiten())
+        self.assertGreaterEqual(len(doc_seiten()), 2)
+
+    def lies(self, name):
+        with open(os.path.join(DOCS, name), encoding="utf-8") as f:
+            return f.read()
+
+    def test_gemeinsame_merkmale(self):
+        familien = set()
+        for name in doc_seiten():
+            html = self.lies(name)
+            css = " ".join(re.findall(r"<style[^>]*>(.*?)</style>", html, flags=re.S | re.I))
+            with self.subTest(seite=name):
+                self.assertIn('lang="de"', html)
+                self.assertRegex(html, r'<meta[^>]+name="viewport"')
+                m = FAMILIE.search(css)
+                self.assertIsNotNone(m, "gemeinsame Schriftfamilie fehlt")
+                familien.add(re.sub(r"\s+", " ", re.search(r"font-family\s*:([^;}]*)", m.group(0)).group(1)).strip())
+                self.assertRegex(css, r"(?<![-\w])color\s*:\s*#111(?:111)?\s*[;}]")
+                self.assertNotIn("#1e8c2e", html.lower())
+                self.assertEqual(gruen(css), [])
+                self.assertNotRegex(html, r"(?i)(@import|url\(|<link[^>]+stylesheet|<script[^>]+src)")
+        self.assertEqual(len(familien), 1, f"Seiten nutzen verschiedene Schriftfamilien: {familien}")
+
+    def test_zurueck_link(self):
+        for name in doc_seiten():
+            html = self.lies(name)
+            n = len(re.findall(r'<a\b[^>]*href="index\.html"', html))
+            with self.subTest(seite=name):
+                if name == "index.html":
+                    self.assertEqual(n, 0, "Startseite hat keinen Zurück-Link")
+                else:
+                    self.assertEqual(n, 1)
+                    self.assertRegex(html, r'<a\b[^>]*href="index\.html"[^>]*>\s*← Alle Rezepte\s*</a>')
+                    self.assertLess(html.index('href="index.html"'), html.index("<h1"))
+
+
+class ClaudeMdLook(unittest.TestCase):
+    def test_abschnitt_look(self):
+        with open(os.path.join(REPO, "CLAUDE.md"), encoding="utf-8") as f:
+            text = f.read()
+        m = re.search(r"^#+[^\n]*Look[^\n]*\n(.*?)(?=^#+ |\Z)", text, flags=re.S | re.M)
+        self.assertIsNotNone(m, "kein Abschnitt mit 'Look' in der Überschrift")
+        abschnitt = m.group(1)
+        for stichwort in ("seite.py", "docs/"):
+            self.assertIn(stichwort, abschnitt)
+        self.assertRegex(abschnitt, r"Tests?\b")
+        self.assertRegex(abschnitt, r"(?i)nicht von hand|nie von hand|nicht per hand|von hand.{0,20}(nicht|nie)")
+
+    def test_look_aenderung_build_und_plan(self):
+        with open(os.path.join(REPO, "CLAUDE.md"), encoding="utf-8") as f:
+            text = f.read()
+        m = re.search(r"^#+[^\n]*Look[^\n]*\n(.*?)(?=^#+ |\Z)", text, flags=re.S | re.M)
+        self.assertIsNotNone(m)
+        self.assertIn("build.py", m.group(1))
+        self.assertIn("PLAN.md", m.group(1))
+
+
 class VorlageNichtImRepo(unittest.TestCase):
     def git(self, *args):
         try:

@@ -405,15 +405,16 @@ class Inhalt(SeitenTest):
     def test_ohne_quelle_kein_quellenabschnitt(self):
         self.assertNotIn("quelle", self.rezept)
         self.assertNotIn("quelle", self.text_ausserhalb().lower())
-        links = [a for t, a, _ in self.p.elemente if t == "a" and a.get("href")]
-        self.assertEqual(links, [])
+        links = [a["href"] for t, a, _ in self.p.elemente if t == "a" and a.get("href")]
+        self.assertEqual(links, ["index.html"], "außer dem Zurück-Link darf es keinen Link geben")
 
     def test_quelle_null_kein_quellenabschnitt(self):
         r = copy.deepcopy(self.rezept)
         r["quelle"] = None
         p = einlesen(rezeptgraph.seite(r))
         self.assertNotIn("quelle", norm(" ".join(p.text_ausserhalb)).lower())
-        self.assertEqual([a for t, a, _ in p.elemente if t == "a" and a.get("href")], [])
+        self.assertEqual([a["href"] for t, a, _ in p.elemente if t == "a" and a.get("href")],
+                         ["index.html"], "außer dem Zurück-Link darf es keinen Link geben")
 
     def test_leere_allergenliste(self):
         r = copy.deepcopy(self.rezept)
@@ -442,6 +443,36 @@ class MitQuelle(SeitenTest):
 
     def test_tabelle_gleich_layout(self):
         self.assertEqual(zellen_aus_tabelle(self.p.zeilen), rezeptgraph.layout(self.rezept))
+
+
+class Ueberschrift(SeitenTest):
+    def test_h1_regel_bricht_lange_woerter(self):
+        decl = {}
+        for sel, d in self.regeln:
+            if any(t.strip() == "h1" for t in sel.split(",")):
+                decl.update(d)
+        self.assertTrue(decl.get("overflow-wrap") == "anywhere"
+                        or decl.get("word-break") == "break-word",
+                        "h1 ohne overflow-wrap: anywhere / word-break: break-word")
+        self.assertEqual(decl.get("hyphens"), "auto")
+
+    def test_langer_titel_escaped_in_h1(self):
+        r = copy.deepcopy(self.rezept)
+        r["titel"] = "A&B" + "x" * 57  # langes Wort ohne Leerzeichen, mit Sonderzeichen
+        p = einlesen(rezeptgraph.seite(r))
+        self.assertEqual(norm("".join(p.h1)), r["titel"])
+        self.assertIn("<h1>A&amp;B" + "x" * 57 + "</h1>", rezeptgraph.seite(r))
+
+
+class TabellenContainer(SeitenTest):
+    def test_container_fokussierbar_und_beschriftet(self):
+        divs = [a for t, a, _ in self.p.elemente
+                if t == "div" and "tabelle" in (a.get("class") or "").split()]
+        self.assertEqual(len(divs), 1)
+        a = divs[0]
+        self.assertEqual(a.get("tabindex"), "0")
+        self.assertEqual(a.get("role"), "region")
+        self.assertTrue((a.get("aria-label") or "").strip(), "aria-label fehlt oder leer")
 
 
 class Mobil(SeitenTest):
@@ -678,7 +709,7 @@ class Abfolgeleser(HTMLParser):
 
 
 class Reihenfolge(SeitenTest):
-    """Paket 5c: Titel, Portionen, Tabelle, Allergen-Hinweis (mit
+    """Paket 5c/5f: Zurück-Link, Titel, Portionen, Tabelle, Allergen-Hinweis (mit
     Unvollständigkeitshinweis), danach Quelle (falls vorhanden)."""
 
     def abfolge(self):
@@ -695,6 +726,9 @@ class Reihenfolge(SeitenTest):
     def pruefe(self):
         text = self.abfolge()
         h1 = self.pos(text, "\x00H1\x00")
+        zurueck = self.pos(text, "\x00LINK:index.html\x00")
+        self.assertLess(zurueck, h1, "Zurück-Link steht nicht vor der Überschrift")
+        self.assertLess(zurueck, self.pos(text, "Alle Rezepte"))
         titel = self.pos(text, self.rezept["titel"])
         portionen = self.pos(text, norm(self.rezept["portionen"]))
         tab_start = self.pos(text, "\x00TABELLE_START\x00")
@@ -727,6 +761,241 @@ class ReihenfolgeMitQuelle(Reihenfolge):
                            "Quelle steht nicht nach dem Allergen-Hinweis")
         self.assertGreater(link, letzter_hinweis,
                            "Quellen-Link steht nicht nach dem Allergen-Hinweis")
+
+
+# --- Paket 5f: gemeinsamer Look, schwarze dickere Tabelle, Zurück-Button
+
+def farbwert(wert):
+    wert = (wert or "").strip().lower().replace("!important", "").strip()
+    wert = {"black": "#000000", "white": "#ffffff"}.get(wert, wert)
+    m = re.fullmatch(r"#([0-9a-f]{3}|[0-9a-f]{6})", wert)
+    if not m:
+        return None
+    h = m.group(1)
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def ist_schwarz111(wert):
+    """#111, #111111 oder black (black zählt als gleichwertig)."""
+    return farbwert(wert) in ((0x11, 0x11, 0x11), (0, 0, 0))
+
+
+def enthaelt_schwarz111(wert):
+    return any(ist_schwarz111(t) for t in re.findall(r"#[0-9a-fA-F]{3,6}\b|\bblack\b", wert or ""))
+
+
+def gruene_farben(css):
+    """Alle grünen Farbangaben im CSS: Hexwerte mit deutlich dominantem Grünanteil, 'green' & Co."""
+    css = css.lower()
+    treffer = re.findall(r"\b(?:green|lime|olive|teal|darkgreen|lightgreen|seagreen|forestgreen)\b", css)
+    for h in re.findall(r"#[0-9a-f]{6}\b|#[0-9a-f]{3}\b", css):
+        r, g, b = farbwert(h)
+        if g - max(r, b) >= 24:
+            treffer.append(h)
+    for m in re.finditer(r"rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)", css):
+        r, g, b = (int(x) for x in m.groups())
+        if g - max(r, b) >= 24:
+            treffer.append(m.group(0))
+    return treffer
+
+
+def px_breiten(wert):
+    return [float(x) for x in re.findall(r"([0-9]*\.?[0-9]+)px", wert or "")]
+
+
+def rahmenbreite(decl):
+    """Rahmenbreite in px aus border bzw. border-width (oder None)."""
+    for k in ("border", "border-width"):
+        if k in decl:
+            b = px_breiten(decl[k])
+            if b:
+                return min(b)
+    seiten = [px_breiten(decl.get(f"border-{s}", "")) for s in ("top", "right", "bottom", "left")]
+    if all(seiten):
+        return min(b[0] for b in seiten)
+    return None
+
+
+class GemeinsamerLook(SeitenTest):
+    def basis_deklarationen(self):
+        d = {}
+        for s, decl in self.regeln:
+            if s.replace(" ", "") in ("body", "html", "html,body", "body,html", "*"):
+                d.update(decl)
+        return d
+
+    def test_schrift_plus_jakarta_sans_zuerst_und_systemschrift_am_ende(self):
+        familie = self.basis_deklarationen().get("font-family")
+        self.assertIsNotNone(familie, "keine font-family an body/html")
+        teile = [t.strip().strip("\"'").lower() for t in familie.split(",")]
+        self.assertEqual(teile[0], "plus jakarta sans")
+        self.assertIn(teile[-1], ("sans-serif", "system-ui", "ui-sans-serif"))
+
+    def test_text_111_auf_weiss(self):
+        d = self.basis_deklarationen()
+        self.assertTrue(ist_schwarz111(d.get("color")), d)
+        hg = d.get("background-color") or d.get("background")
+        self.assertIn(farbwert(hg), [(255, 255, 255)], f"Hintergrund {hg!r}")
+
+    def test_h1_gewicht_800(self):
+        treffer = [d for s, d in self.regeln if selektor_trifft_tag(s, "h1") and d.get("font-weight") == "800"]
+        self.assertTrue(treffer, "h1 ohne font-weight: 800")
+
+    def test_kein_gruen(self):
+        self.assertEqual(gruene_farben("\n".join(self.p.css)), [])
+        self.assertNotIn("#1e8c2e", self.html.lower())
+
+    def test_nichts_extern_geladen(self):
+        css = "\n".join(self.p.css).lower()
+        self.assertNotIn("@import", css)
+        self.assertNotIn("@font-face", css)
+        self.assertNotIn("url(", css)
+        self.assertNotIn("fonts.googleapis", self.html.lower())
+
+    def test_basis_styles_wie_startseite(self):
+        start = einlesen(rezeptgraph.startseite([("brownies", self.rezept)]))
+        regeln_start = css_regeln("\n".join(start.css))
+
+        def deklaration(regeln, eigenschaft):
+            werte = set()
+            for s, d in regeln:
+                if s.replace(" ", "") in ("body", "html", "html,body", "body,html") and eigenschaft in d:
+                    werte.add(d[eigenschaft])
+            return werte
+
+        for eig in ("font-family", "color"):
+            with self.subTest(eigenschaft=eig):
+                a, b = deklaration(self.regeln, eig), deklaration(regeln_start, eig)
+                self.assertTrue(a and b, (a, b))
+                self.assertEqual(a, b)
+        # wörtlich: dieselbe Schriftfamilien-Deklaration steht in beiden Seiten
+        wort = lambda html: {norm(m) for m in re.findall(r"font-family\s*:\s*([^;}]+)", html, flags=re.I)}
+        self.assertTrue(wort(self.html) & wort(rezeptgraph.startseite([("brownies", self.rezept)])))
+
+
+class TabelleSchwarzDick(SeitenTest):
+    def td_regeln(self):
+        return [d for s, d in self.regeln if selektor_trifft_tag(s, "td") and voller_rahmen(d)]
+
+    def table_regeln(self):
+        return [d for s, d in self.regeln
+                if selektor_trifft_tag(s, "table") and rahmenbreite(d) is not None]
+
+    def test_zellrahmen_mindestens_3px(self):
+        regs = self.td_regeln()
+        self.assertTrue(regs)
+        for d in regs:
+            self.assertGreaterEqual(rahmenbreite(d) or 0, 3, d)
+
+    def test_zellrahmen_schwarz(self):
+        for d in self.td_regeln():
+            vals = " ".join(v for k, v in d.items() if k.startswith("border") and k != "border-collapse")
+            self.assertTrue(enthaelt_schwarz111(vals), d)
+
+    def test_aussenrahmen_mindestens_4px_und_nicht_duenner_als_zellen(self):
+        regs = self.table_regeln()
+        self.assertTrue(regs, "kein Rahmen an der Tabelle")
+        zelle = min(rahmenbreite(d) for d in self.td_regeln())
+        for d in regs:
+            self.assertGreaterEqual(rahmenbreite(d), 4, d)
+            self.assertGreaterEqual(rahmenbreite(d), zelle, d)
+
+    def test_aussenrahmen_schwarz(self):
+        for d in self.table_regeln():
+            vals = " ".join(v for k, v in d.items() if k.startswith("border") and k != "border-collapse")
+            self.assertTrue(enthaelt_schwarz111(vals), d)
+
+    def test_kein_gruen_in_der_tabelle(self):
+        self.assertEqual(gruene_farben("\n".join(self.p.css)), [])
+
+
+class Hinweiskasten(SeitenTest):
+    def hinweis_regeln(self):
+        return [d for s, d in self.regeln if ".hinweise" in s]
+
+    def test_akzent_schwarz_ohne_gruen(self):
+        regs = self.hinweis_regeln()
+        self.assertTrue(regs, "keine Regel für den Hinweiskasten")
+        akzent = [v for d in regs for k, v in d.items() if k.startswith("border")]
+        self.assertTrue(any(enthaelt_schwarz111(v) for v in akzent), akzent)
+        self.assertEqual(gruene_farben(" ".join(f"{k}:{v};" for d in regs for k, v in d.items())), [])
+
+    def test_flaeche_hell_neutral(self):
+        for d in self.hinweis_regeln():
+            hg = d.get("background-color") or d.get("background")
+            if hg:
+                f = farbwert(hg)
+                self.assertIsNotNone(f, hg)
+                self.assertGreaterEqual(min(f), 0xE8, hg)
+                self.assertLessEqual(max(f) - min(f), 12, f"nicht neutral: {hg}")
+
+
+class ZurueckButton(SeitenTest):
+    def links(self):
+        return [(a, ) for t, a, _ in self.p.elemente if t == "a" and a.get("href") == "index.html"]
+
+    def test_genau_ein_zurueck_link_relativ_mit_text(self):
+        self.assertEqual(len(self.links()), 1)
+        a = Abfolgeleser()
+        a.feed(self.html)
+        self.assertIn("\x00LINK:index.html\x00 ← Alle Rezepte", a.abfolge())
+        self.assertEqual(len(re.findall(r'href="index\.html"', self.html)), 1)
+
+    def test_vor_der_ueberschrift(self):
+        a = Abfolgeleser()
+        a.feed(self.html)
+        t = a.abfolge()
+        self.assertIn("\x00LINK:index.html\x00", t, "kein Zurück-Link")
+        self.assertLess(t.index("\x00LINK:index.html\x00"), t.index("\x00H1\x00"))
+
+    def _regeln(self):
+        self.assertTrue(self.links(), "kein Zurück-Link auf index.html")
+        attrs = self.links()[0][0]
+        klassen = (attrs.get("class") or "").split()
+        if klassen:
+            return [(s, d) for s, d in self.regeln if any(selektor_erwaehnt(s, "." + k) for k in klassen)]
+        return [(s, d) for s, d in self.regeln
+                if selektor_trifft_tag(s, "a") and ".quelle" not in s]
+
+    def test_mindesthoehe_44px(self):
+        hoehen = [px_breiten(d.get("min-height"))[0] for s, d in self._regeln()
+                  if px_breiten(d.get("min-height")) and not re.search(r":(hover|focus)", s)]
+        self.assertTrue(hoehen, f"kein min-height in px für den Button: {self._regeln()}")
+        self.assertGreaterEqual(max(hoehen), 44)
+
+    def test_sichtbarer_rahmen(self):
+        treffer = [d for s, d in self._regeln() if not re.search(r":(hover|focus)", s)
+                   and voller_rahmen(d) and not rahmen_entfernt(d)]
+        self.assertTrue(treffer, f"kein Rahmen am Button: {self._regeln()}")
+
+    def test_hover_fokus_dunkel_mit_heller_schrift(self):
+        def hell(w): 
+            f = farbwert(w)
+            return f is not None and min(f) >= 0xF0
+        def dunkel(w):
+            f = farbwert(w)
+            return f is not None and max(f) <= 0x44
+        treffer = [s for s, d in self._regeln() if re.search(r":(hover|focus)", s)
+                   and dunkel(d.get("background-color") or d.get("background")) and hell(d.get("color"))]
+        self.assertTrue(treffer, f"keine Hover-/Fokus-Regel mit dunklem Grund, heller Schrift: {self._regeln()}")
+        fokus = [s for s in treffer if "focus" in s]
+        self.assertTrue(fokus, "keine Fokus-Regel (:focus oder :focus-visible)")
+
+
+class FormatBleibtStilfrei(unittest.TestCase):
+    def test_zusatzfelder_aendern_die_seite_nicht(self):
+        basis = rezeptgraph.seite(fixture("brownies.json"))
+        for feld in ("style", "farbe", "css"):
+            with self.subTest(feld=feld):
+                r = fixture("brownies.json")
+                r[feld] = "body { background: #f00; color: red }"
+                try:
+                    html = rezeptgraph.seite(r)
+                except rezeptgraph.RezeptFehler:
+                    continue  # abgelehnt ist ebenfalls in Ordnung
+                self.assertEqual(html, basis)
 
 
 class Deutsch(SeitenTest):
