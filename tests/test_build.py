@@ -330,8 +330,35 @@ class StartseitePaket5d(unittest.TestCase):
         self.assertIsNotNone(m, "keine h1")
         self.assertIn("Rezepte", norm(re.sub(r"<[^>]+>", " ", m.group(1))))
 
-    def test_motto_sichtbar(self):
-        self.assertIn(MOTTO, sichtbar(self.p))
+    def _body(self):
+        m = re.search(r"<body[^>]*>(.*)</body>", self.html, flags=re.S | re.I)
+        self.assertIsNotNone(m, "kein body")
+        return m.group(1)
+
+    def _body_text(self):
+        roh = re.sub(r"<(style|script)\b.*?</\1>", " ", self._body(), flags=re.S | re.I)
+        return norm(re.sub(r"<[^>]+>", " ", roh)).replace(" ,", ",")
+
+    def test_motto_steht_in_der_h1(self):
+        m = re.search(r"<h1[^>]*>(.*?)</h1>", self.html, flags=re.S | re.I)
+        self.assertIsNotNone(m, "keine h1")
+        self.assertEqual(norm(re.sub(r"<[^>]+>", " ", m.group(1))), "Rezepte weniger schwer")
+
+    def test_motto_mit_komma_nicht_im_sichtbaren_body(self):
+        self.assertNotIn(MOTTO, self._body_text())
+
+    def test_kein_motto_element_im_body(self):
+        self.assertFalse([1 for t, a in self.p.elemente
+                          if "motto" in (a.get("class") or "").split()])
+        self.assertNotRegex(self._body(), r"class\s*=\s*[\"'][^\"']*\bmotto\b")
+
+    def test_css_ohne_motto_klasse(self):
+        self.assertNotRegex(self.css, r"\.motto\b")
+
+    def test_untertitel(self):
+        text = self._body_text()
+        self.assertIn("Zutaten, Schritte und Allergene auf einen Blick.", text)
+        self.assertNotIn("qr", text.lower())
 
     def test_motto_im_title(self):
         self.assertIn(MOTTO, norm("".join(self.p.title)).replace(" ,", ","))
@@ -390,9 +417,15 @@ class StartseitePaket5d(unittest.TestCase):
         self.assertTrue(any(w >= 700 for w in zahlen), gewichte)
         self.assertTrue(any(w <= 400 for w in zahlen), gewichte)
 
-    def test_schwarzer_balken_mit_weisser_schrift(self):
-        balken = [s for s, d in self.regeln if dunkel(hintergrund(d)) and hell(d.get("color"))]
-        self.assertTrue(balken, "keine Regel mit schwarzem Hintergrund und weißer Schrift")
+    def test_hover_fokus_dunkel_mit_heller_schrift(self):
+        treffer = [sel for sel, d in self.regeln
+                   if re.search(r":(hover|focus)", sel) and dunkel(hintergrund(d)) and hell(d.get("color"))]
+        self.assertTrue(treffer, "keine :hover/:focus-Regel mit dunklem Hintergrund und heller Schrift")
+
+    def test_kein_dunkler_balken_ausser_hover_fokus(self):
+        andere = [sel for sel, d in self.regeln
+                  if dunkel(hintergrund(d)) and hell(d.get("color")) and not re.search(r":(hover|focus)", sel)]
+        self.assertFalse(andere, f"dunkle Balken außerhalb von Hover/Fokus: {andere}")
 
     def test_hover_oder_fokus_fuer_links(self):
         treffer = [s for s, _ in self.regeln
@@ -437,16 +470,6 @@ class StartseitePaket5d(unittest.TestCase):
         html = rezeptgraph.startseite([("lang", lang)])
         p = einlesen(html)
         self.assertIn(("lang.html", "x" * 70), p.links)
-
-    # Motto-Balken ist für Screenreader ausgeblendet, Text bleibt sichtbar
-
-    def test_motto_balken_aria_hidden(self):
-        body = re.search(r"<body[^>]*>(.*)</body>", self.html, flags=re.S | re.I)
-        self.assertIsNotNone(body, "kein body")
-        m = re.search(r"<(\w+)([^>]*)>\s*" + re.escape(MOTTO) + r"\s*</\1>", body.group(1))
-        self.assertIsNotNone(m, "kein Element im body, das nur das Motto enthält")
-        self.assertRegex(m.group(2), r"aria-hidden\s*=\s*[\"']true[\"']")
-        self.assertIn(MOTTO, sichtbar(self.p))
 
     def test_title_ist_genau_das_motto(self):
         self.assertEqual(norm("".join(self.p.title)), MOTTO)

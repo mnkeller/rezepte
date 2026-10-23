@@ -94,10 +94,20 @@ Wunsch von Michi (23.10.): Startseite ansprechender, ein bisschen wie www.moinsd
 
 Abnahmekriterien:
 - [x] `vorlage/brownies.png` ist nicht mehr im Repo (`.gitignore` enthält `vorlage/`), liegt aber lokal weiter.
-- [x] Startseite zeigt Titel "Rezepte" und das Motto "Rezepte, weniger schwer" (im Seitentitel und als Überschrift), Gestaltung: weiß/schwarz, kräftig/leicht gesetzte Überschrift, Motto-/Untertitelzeile als schwarzer Balken mit weißer Schrift, Rezeptliste als große, gut antippbare Einträge mit Hover/Fokus-Zustand. Systemschrift (Plus Jakarta Sans nur als erste Wahl, kein Nachladen), alles inline.
+- [x] Startseite zeigt Titel "Rezepte" und das Motto "Rezepte, weniger schwer" (im Seitentitel und als Überschrift), Gestaltung: weiß/schwarz, kräftig/leicht gesetzte Überschrift, Rezeptliste als große, gut antippbare Einträge mit Hover/Fokus-Zustand. Systemschrift (Plus Jakarta Sans nur als erste Wahl, kein Nachladen), alles inline.
 - [x] Hinweis am Ende der Startseite: "Darstellung inspiriert von Cooking for Engineers" mit Link auf https://www.cookingforengineers.com/.
 - [x] Rezeptseiten bleiben unverändert; Startseite weiter eigenständig, mobil lesbar, escaped, Links `<slug>.html`, sortiert nach Titel.
 - [x] Review: Screenshot Desktop und Handybreite, Vergleich mit moinsdifficile.de im Geist (nicht kopiert: Logo und Texte von dort werden nicht übernommen).
+
+## Paket 5e: Startseite entschlackt
+
+Wunsch von Michi (23.10.): Den schwarzen Motto-Balken entfernen (das Motto steht nur noch in der Überschrift) und "meist mit QR-Code am Essen" aus dem Untertitel streichen (Untertitel: "Zutaten, Schritte und Allergene auf einen Blick.").
+
+Abnahmekriterien:
+- [x] Kein Motto-Balken (kein Element mit Klasse `motto`, keine Regel mit schwarzem Balken außer dem Hover-/Fokus-Zustand der Listeneinträge).
+- [x] Das Motto "Rezepte, weniger schwer" steht in der Überschrift (h1, zwei Zeilen) und im `<title>`, nicht doppelt im Body sichtbar.
+- [x] Untertitel lautet "Zutaten, Schritte und Allergene auf einen Blick." und erwähnt keinen QR-Code.
+- [x] Übrige Kriterien aus Paket 5d bleiben erfüllt.
 
 ## Paket 6: Veröffentlichung und echter Durchlauf
 

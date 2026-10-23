@@ -118,9 +118,8 @@ STARTSEITE_CSS = """
 *{box-sizing:border-box}
 html, body{margin:0;padding:0;background:#fff;color:#111;font-family:"Plus Jakarta Sans",ui-sans-serif,-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",sans-serif}
 body{padding:3rem 1rem 3rem;text-align:center;line-height:1.5}
-h1{margin:0 0 1.5rem;font-size:clamp(2.8rem,9vw,6rem);line-height:1;letter-spacing:-0.02em;font-weight:300}
+h1{margin:0 0 2rem;font-size:clamp(2.8rem,9vw,6rem);line-height:1;letter-spacing:-0.02em;font-weight:300}
 h1 strong{display:block;font-weight:800}
-.motto{display:inline-block;background:#111;color:#fff;font-weight:700;padding:.5rem 1.2rem;margin:0 0 1.5rem}
 .untertitel{margin:0 auto 3rem;max-width:40rem;font-size:1.1rem;font-weight:500;color:#333}
 .rezepte{list-style:none;margin:0 auto;padding:0;max-width:40rem;border-top:1px solid #111;text-align:left}
 .rezepte li{border-bottom:1px solid #111}
@@ -149,8 +148,7 @@ def startseite(rezepte):
         "</head>",
         "<body>",
         '<h1><strong>Rezepte</strong> weniger schwer</h1>',
-        '<p class="motto" aria-hidden="true">Rezepte, weniger schwer</p>',
-        '<p class="untertitel">Zutaten, Schritte und Allergene auf einen Blick – meist mit QR-Code am Essen.</p>',
+        '<p class="untertitel">Zutaten, Schritte und Allergene auf einen Blick.</p>',
     ]
     if sortiert:
         teile.append('<ul class="rezepte">')
