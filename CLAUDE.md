@@ -9,7 +9,7 @@ Rezeptseiten im Stil von "Cooking for Engineers" aus einer JSON-Beschreibung pro
 - `build.py` – erzeugt die Seiten aus `rezepte/` nach `docs/`
 - `docs/` – erzeugte Seiten, von GitHub Pages ausgeliefert (nicht von Hand bearbeiten)
 - `tests/` – Tests und Fixtures
-- `vorlage/` – Referenzbilder (Brownie-Vorlage)
+- `vorlage/` – lokale Referenzbilder, nicht im Repo (Urheberrecht, steht in .gitignore)
 
 ## Werkzeuge
 
