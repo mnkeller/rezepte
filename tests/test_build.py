@@ -19,6 +19,7 @@ docs/ unberührt bleiben.
 import copy
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -260,6 +261,202 @@ class StartseiteDirekt(unittest.TestCase):
         self.assertNotIn("<scharf>", html)
         self.assertNotIn("scharf", {t for t, _ in p.elemente})
         self.assertIn(("mac.html", "Mac & Cheese <scharf>"), p.links)
+
+
+# --- Paket 5d: Startseite im Stil von moinsdifficile.de, Hinweis auf Cooking for Engineers
+
+MOTTO = "Rezepte, weniger schwer"
+CFE = "https://www.cookingforengineers.com/"
+GRUND = ("body", "html", "html, body", "body, html")
+
+
+def sichtbar(p):
+    return norm(" ".join(p.texte)).replace(" ,", ",")
+
+
+def regeln(css):
+    """[(selektor, {eigenschaft: wert})] aus einfachem CSS (ohne Verschachtelung)."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    ergebnis = []
+    for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        deklarationen = {}
+        for dekl in body.split(";"):
+            if ":" in dekl:
+                k, v = dekl.split(":", 1)
+                deklarationen[k.strip().lower()] = norm(v).lower()
+        ergebnis.append((norm(sel).lower(), deklarationen))
+    return ergebnis
+
+
+def farbe(wert):
+    """'#rgb'/'#rrggbb'/black/white -> (r, g, b) oder None."""
+    wert = (wert or "").strip().lower().replace("!important", "").strip()
+    wert = {"black": "#000000", "white": "#ffffff"}.get(wert, wert)
+    m = re.fullmatch(r"#([0-9a-f]{3}|[0-9a-f]{6})", wert)
+    if not m:
+        return None
+    h = m.group(1)
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def dunkel(wert):
+    f = farbe(wert)
+    return f is not None and max(f) <= 0x44
+
+
+def hell(wert):
+    f = farbe(wert)
+    return f is not None and min(f) >= 0xF8
+
+
+def hintergrund(deklarationen):
+    return deklarationen.get("background-color") or deklarationen.get("background")
+
+
+class StartseitePaket5d(unittest.TestCase):
+    def setUp(self):
+        self.paare = [(s, fixture(n)) for s, n in REZEPTE.items()]
+        self.html = rezeptgraph.startseite(self.paare)
+        self.p = einlesen(self.html)
+        self.css = "\n".join(self.p.css)
+        self.regeln = regeln(self.css)
+
+    # Titel und Motto
+
+    def test_h1_enthaelt_rezepte(self):
+        m = re.search(r"<h1[^>]*>(.*?)</h1>", self.html, flags=re.S | re.I)
+        self.assertIsNotNone(m, "keine h1")
+        self.assertIn("Rezepte", norm(re.sub(r"<[^>]+>", " ", m.group(1))))
+
+    def test_motto_sichtbar(self):
+        self.assertIn(MOTTO, sichtbar(self.p))
+
+    def test_motto_im_title(self):
+        self.assertIn(MOTTO, norm("".join(self.p.title)).replace(" ,", ","))
+
+    # Hinweis auf Cooking for Engineers
+
+    def test_hinweis_text_und_link(self):
+        self.assertIn("Darstellung inspiriert von Cooking for Engineers", sichtbar(self.p))
+        self.assertIn((CFE, "Cooking for Engineers"), self.p.links)
+
+    def test_hinweis_nach_der_rezeptliste(self):
+        letzter = max(self.html.rfind('href="%s.html"' % s) for s in REZEPTE)
+        self.assertGreater(letzter, 0)
+        self.assertGreater(self.html.find("Darstellung inspiriert von"), letzter)
+        self.assertGreater(self.html.find(CFE), letzter)
+
+    def test_einziger_externer_link_mit_noopener(self):
+        extern = [a for t, a in self.p.elemente
+                  if t == "a" and re.match(r"^(https?:)?//", a.get("href") or "")]
+        self.assertEqual([a["href"] for a in extern], [CFE])
+        self.assertIn("noopener", (extern[0].get("rel") or "").lower())
+
+    # Eigenständigkeit: Links ja, Laden nein
+
+    def test_nichts_externes_wird_geladen(self):
+        for tag, attrs in self.p.elemente:
+            with self.subTest(tag=tag, attrs=attrs):
+                if tag != "a":
+                    for k in ("href", "src", "data", "srcset", "poster"):
+                        self.assertNotRegex(attrs.get(k) or "", r"^(https?:)?//")
+                self.assertNotIn("url(", (attrs.get("style") or "").lower())
+        self.assertNotIn("@import", self.css.lower())
+        self.assertNotIn("url(", self.css.lower())
+        self.assertNotIn("@font-face", self.css.lower())
+        self.assertFalse([1 for t, _ in self.p.elemente if t == "script"])
+
+    # CSS: schwarz auf weiß
+
+    def test_text_dunkel_auf_weissem_grund(self):
+        farben = [d.get("color") for s, d in self.regeln if s in GRUND]
+        grund = [hintergrund(d) for s, d in self.regeln if s in GRUND]
+        self.assertTrue(any(dunkel(f) for f in farben), f"Textfarbe: {farben}")
+        self.assertTrue(any(hell(g) for g in grund), f"Hintergrund: {grund}")
+
+    def test_kein_gruen(self):
+        self.assertNotIn("#1e8c2e", self.css.lower())
+
+    def test_ueberschrift_kraeftig_und_leicht(self):
+        # Tag-Struktur der Überschrift bleibt offen: geprüft werden die font-weight-Werte im CSS.
+        gewichte = set()
+        for _, d in self.regeln:
+            w = d.get("font-weight")
+            if w:
+                gewichte.add({"bold": "700", "normal": "400", "lighter": "300"}.get(w, w))
+        zahlen = [int(w) for w in gewichte if w.isdigit()]
+        self.assertTrue(any(w >= 700 for w in zahlen), gewichte)
+        self.assertTrue(any(w <= 400 for w in zahlen), gewichte)
+
+    def test_schwarzer_balken_mit_weisser_schrift(self):
+        balken = [s for s, d in self.regeln if dunkel(hintergrund(d)) and hell(d.get("color"))]
+        self.assertTrue(balken, "keine Regel mit schwarzem Hintergrund und weißer Schrift")
+
+    def test_hover_oder_fokus_fuer_links(self):
+        treffer = [s for s, _ in self.regeln
+                   if re.search(r"(^|[\s>+~,])(a|\.[\w-]+)?:(hover|focus)|\ba:(hover|focus)|\ba\b.*:(hover|focus)", s)]
+        self.assertTrue(treffer, "keine :hover/:focus-Regel für Links")
+
+    def test_schrift_endet_auf_systemschrift(self):
+        familien = [d["font-family"] for _, d in self.regeln if "font-family" in d]
+        self.assertTrue(familien, "keine font-family")
+        for f in familien:
+            with self.subTest(font=f):
+                letzte = f.split(",")[-1].strip().strip("\"'")
+                self.assertIn(letzte, ("sans-serif", "system-ui", "serif", "ui-sans-serif"))
+
+    # Lange Wörter sprengen die Listenzeile nicht
+
+    def _listenlink_regeln(self):
+        return [d for s, d in self.regeln
+                if ".rezepte" in s and re.search(r"(^|[\s>])a\b(?!:)", s) and "::after" not in s
+                and ":hover" not in s and ":focus" not in s]
+
+    def test_listenlink_bricht_lange_woerter_um(self):
+        regs = self._listenlink_regeln()
+        self.assertTrue(regs, "keine CSS-Regel für die Links der Rezeptliste")
+        ok = any(d.get("overflow-wrap") in ("anywhere", "break-word")
+                 or d.get("word-wrap") in ("break-word", "anywhere")
+                 or d.get("word-break") in ("break-word", "break-all") for d in regs)
+        self.assertTrue(ok, f"kein overflow-wrap: anywhere / word-break in {regs}")
+
+    def test_pfeil_schrumpft_nicht_im_flex_link(self):
+        regs = self._listenlink_regeln()
+        if not any(d.get("display") in ("flex", "inline-flex") for d in regs):
+            self.skipTest("Link ist kein Flex-Container")
+        pfeil = [d for s, d in self.regeln if ".rezepte" in s and "::after" in s]
+        self.assertTrue(pfeil, "keine ::after-Regel für den Pfeil")
+        self.assertTrue(any(d.get("flex-shrink") == "0" or d.get("flex", "").split()[:2] == ["0", "0"]
+                            for d in pfeil), f"Pfeil ohne flex-shrink: 0: {pfeil}")
+
+    def test_titel_ohne_leerzeichen_70_zeichen(self):
+        lang = fixture("brownies.json")
+        lang["titel"] = "x" * 70
+        html = rezeptgraph.startseite([("lang", lang)])
+        p = einlesen(html)
+        self.assertIn(("lang.html", "x" * 70), p.links)
+
+    # Motto-Balken ist für Screenreader ausgeblendet, Text bleibt sichtbar
+
+    def test_motto_balken_aria_hidden(self):
+        body = re.search(r"<body[^>]*>(.*)</body>", self.html, flags=re.S | re.I)
+        self.assertIsNotNone(body, "kein body")
+        m = re.search(r"<(\w+)([^>]*)>\s*" + re.escape(MOTTO) + r"\s*</\1>", body.group(1))
+        self.assertIsNotNone(m, "kein Element im body, das nur das Motto enthält")
+        self.assertRegex(m.group(2), r"aria-hidden\s*=\s*[\"']true[\"']")
+        self.assertIn(MOTTO, sichtbar(self.p))
+
+    def test_title_ist_genau_das_motto(self):
+        self.assertEqual(norm("".join(self.p.title)), MOTTO)
+
+    # Rezeptseiten unverändert
+
+    def test_rezeptseite_bleibt_gruen_ohne_motto(self):
+        html = rezeptgraph.seite(fixture("brownies.json"))
+        self.assertIn("#1e8c2e", html.lower())
+        self.assertNotIn("weniger schwer", html)
 
 
 # --- Kriterium 3: ungültiges Rezept bricht ab, ziel bleibt unberührt

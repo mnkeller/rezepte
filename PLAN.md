@@ -93,11 +93,11 @@ Abnahmekriterien:
 Wunsch von Michi (23.10.): Startseite ansprechender, ein bisschen wie www.moinsdifficile.de, Motto "Rezepte, weniger schwer". Nach Recherche zu "Patent Pending" bei Cooking for Engineers: Bild der Vorlage aus dem öffentlichen Repo nehmen (nur ab jetzt, keine Historie umschreiben) und Hinweis auf der Startseite.
 
 Abnahmekriterien:
-- [ ] `vorlage/brownies.png` ist nicht mehr im Repo (`.gitignore` enthält `vorlage/`), liegt aber lokal weiter.
-- [ ] Startseite zeigt Titel "Rezepte" und das Motto "Rezepte, weniger schwer" (im Seitentitel und als Überschrift), Gestaltung: weiß/schwarz, kräftig/leicht gesetzte Überschrift, Motto-/Untertitelzeile als schwarzer Balken mit weißer Schrift, Rezeptliste als große, gut antippbare Einträge mit Hover/Fokus-Zustand. Systemschrift (Plus Jakarta Sans nur als erste Wahl, kein Nachladen), alles inline.
-- [ ] Hinweis am Ende der Startseite: "Darstellung inspiriert von Cooking for Engineers" mit Link auf https://www.cookingforengineers.com/.
-- [ ] Rezeptseiten bleiben unverändert; Startseite weiter eigenständig, mobil lesbar, escaped, Links `<slug>.html`, sortiert nach Titel.
-- [ ] Review: Screenshot Desktop und Handybreite, Vergleich mit moinsdifficile.de im Geist (nicht kopiert: Logo und Texte von dort werden nicht übernommen).
+- [x] `vorlage/brownies.png` ist nicht mehr im Repo (`.gitignore` enthält `vorlage/`), liegt aber lokal weiter.
+- [x] Startseite zeigt Titel "Rezepte" und das Motto "Rezepte, weniger schwer" (im Seitentitel und als Überschrift), Gestaltung: weiß/schwarz, kräftig/leicht gesetzte Überschrift, Motto-/Untertitelzeile als schwarzer Balken mit weißer Schrift, Rezeptliste als große, gut antippbare Einträge mit Hover/Fokus-Zustand. Systemschrift (Plus Jakarta Sans nur als erste Wahl, kein Nachladen), alles inline.
+- [x] Hinweis am Ende der Startseite: "Darstellung inspiriert von Cooking for Engineers" mit Link auf https://www.cookingforengineers.com/.
+- [x] Rezeptseiten bleiben unverändert; Startseite weiter eigenständig, mobil lesbar, escaped, Links `<slug>.html`, sortiert nach Titel.
+- [x] Review: Screenshot Desktop und Handybreite, Vergleich mit moinsdifficile.de im Geist (nicht kopiert: Logo und Texte von dort werden nicht übernommen).
 
 ## Paket 6: Veröffentlichung und echter Durchlauf
 

@@ -114,6 +114,26 @@ def seite(rezept):
     return "\n".join(teile)
 
 
+STARTSEITE_CSS = """
+*{box-sizing:border-box}
+html, body{margin:0;padding:0;background:#fff;color:#111;font-family:"Plus Jakarta Sans",ui-sans-serif,-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",sans-serif}
+body{padding:3rem 1rem 3rem;text-align:center;line-height:1.5}
+h1{margin:0 0 1.5rem;font-size:clamp(2.8rem,9vw,6rem);line-height:1;letter-spacing:-0.02em;font-weight:300}
+h1 strong{display:block;font-weight:800}
+.motto{display:inline-block;background:#111;color:#fff;font-weight:700;padding:.5rem 1.2rem;margin:0 0 1.5rem}
+.untertitel{margin:0 auto 3rem;max-width:40rem;font-size:1.1rem;font-weight:500;color:#333}
+.rezepte{list-style:none;margin:0 auto;padding:0;max-width:40rem;border-top:1px solid #111;text-align:left}
+.rezepte li{border-bottom:1px solid #111}
+.rezepte a{display:flex;justify-content:space-between;align-items:center;min-height:48px;padding:1.1rem 1rem;font-size:1.4rem;font-weight:600;color:#111;text-decoration:none;overflow-wrap:anywhere}
+.rezepte a::after{content:"\\2192";margin-left:1rem;flex-shrink:0}
+.rezepte a:hover,.rezepte a:focus-visible{background:#111;color:#fff;outline:3px solid #111;outline-offset:2px}
+.leer{font-size:1.1rem}
+.hinweis{margin:3rem 0 0;font-size:.9rem;color:#555}
+.hinweis a{color:#555}
+.hinweis a:hover,.hinweis a:focus{color:#111}
+"""
+
+
 def startseite(rezepte):
     """Erzeugt die eigenständige HTML-Startseite aus (slug, rezept)-Paaren.
     Die Liste ist nach Titel sortiert, unabhängig von der Eingabereihenfolge."""
@@ -124,11 +144,13 @@ def startseite(rezepte):
         "<head>",
         '<meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
-        "<title>Rezepte</title>",
-        f"<style>{CSS}</style>",
+        "<title>Rezepte, weniger schwer</title>",
+        f"<style>{STARTSEITE_CSS}</style>",
         "</head>",
         "<body>",
-        "<h1>Rezepte</h1>",
+        '<h1><strong>Rezepte</strong> weniger schwer</h1>',
+        '<p class="motto" aria-hidden="true">Rezepte, weniger schwer</p>',
+        '<p class="untertitel">Zutaten, Schritte und Allergene auf einen Blick – meist mit QR-Code am Essen.</p>',
     ]
     if sortiert:
         teile.append('<ul class="rezepte">')
@@ -137,6 +159,10 @@ def startseite(rezepte):
             teile.append(f'<li><a href="{href}">{escape(rezept["titel"])}</a></li>')
         teile.append("</ul>")
     else:
-        teile.append("<p>Noch keine Rezepte.</p>")
-    teile += ["</body>", "</html>", ""]
+        teile.append('<p class="leer">Noch keine Rezepte.</p>')
+    teile += [
+        '<p class="hinweis">Darstellung inspiriert von '
+        '<a href="https://www.cookingforengineers.com/" rel="noopener noreferrer">Cooking for Engineers</a></p>',
+        "</body>", "</html>", "",
+    ]
     return "\n".join(teile)

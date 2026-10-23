@@ -106,5 +106,24 @@ class DocsAktuell(unittest.TestCase):
                                 f"docs/{name} ist nicht aktuell (python3 build.py ausführen)")
 
 
+class VorlageNichtImRepo(unittest.TestCase):
+    def git(self, *args):
+        try:
+            return subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True, timeout=30)
+        except (FileNotFoundError, OSError):
+            self.skipTest("git nicht verfügbar")
+
+    def test_vorlage_ignoriert_und_nicht_getrackt(self):
+        if self.git("rev-parse", "--is-inside-work-tree").stdout.strip() != "true":
+            self.skipTest("kein Git-Repo")
+        with open(os.path.join(REPO, ".gitignore"), encoding="utf-8") as f:
+            zeilen = [z.strip() for z in f.read().splitlines()]
+        self.assertTrue({"vorlage/", "/vorlage/", "vorlage", "/vorlage"} & set(zeilen),
+                        "vorlage/ fehlt in .gitignore")
+        r = self.git("ls-files", "vorlage")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(r.stdout.strip(), "", "vorlage/ ist noch im Repo")
+
+
 if __name__ == "__main__":
     unittest.main()
