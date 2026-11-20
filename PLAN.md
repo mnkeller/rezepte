@@ -132,6 +132,22 @@ Abnahmekriterien:
 
 Paket 6 braucht Michi (`gh auth login`, Foto liefern, Freigabe zum Push). Pages wird danach per `gh` auf `main` / `docs` eingeschaltet.
 
+## Paket 7: Umzug auf den Webspace, Rezepte aus der Claude-App
+
+Wunsch von Michi (20.11.): Seiten unter `https://www.moinsdifficile.de/rezepte/` statt GitHub Pages, alte Adresse abschalten. Neue Rezepte bequem per Foto oder Link aus der Claude-App.
+
+Lösung: GitHub bleibt Quelle der Wahrheit. Eine GitHub Action baut bei jedem Push auf `main` die Seiten, lässt die Tests laufen und spiegelt `docs/` per SFTP in den Ordner `rezepte/` neben der WordPress-Installation. Rezepte kommen über eine Claude-Code-Session in der Claude-App (Cloud-Session auf dem Repo), die den Ablauf aus `CLAUDE.md` abarbeitet.
+
+Abnahmekriterien:
+- [ ] Workflow `.github/workflows/veroeffentlichen.yml`: bei Push auf `main` (und von Hand startbar) `build.py`, alle Tests, dann Upload. Schlägt ein Test fehl, wird nichts hochgeladen.
+- [ ] Upload per SFTP mit festem Host-Schlüssel (kein blindes Vertrauen), Passwort nur als GitHub-Secret, nie im Repo.
+- [ ] Der Upload löscht nur innerhalb des Zielordners; der Workflow bricht ab, wenn der Zielordner nicht auf `/rezepte` endet (Schutz der WordPress-Seite).
+- [ ] `https://www.moinsdifficile.de/rezepte/` zeigt die Startseite, Rezeptseiten und Zurück-Link funktionieren, WordPress bleibt unverändert.
+- [ ] GitHub Pages ist abgeschaltet, `mnkeller.github.io/rezepte/` liefert nichts mehr.
+- [ ] `CLAUDE.md`: neue URL, Ablauf in einer Cloud-Session (Screenshot ohne Mac-Chrome, Veröffentlichung über Branch und Pull Request).
+
+Braucht Michi: Secret `SFTP_PASSWORT` und Variable `SFTP_ZIEL` im Repo anlegen, Freigabe zum Push.
+
 ## Entscheidungen (Stopp 1, 22.10.)
 
 - `gh` wird installiert, Pages per `gh` aktivieren.

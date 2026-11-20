@@ -1,0 +1,72 @@
+# Baut die Rezeptseiten, prüft sie und spiegelt docs/ per SFTP nach
+# https://www.moinsdifficile.de/rezepte/ (siehe PLAN.md, Paket 7).
+#
+# Im Repo anzulegen (Settings > Secrets and variables > Actions):
+#   Secret   SFTP_PASSWORT  Passwort des SFTP-Benutzers
+#   Variable SFTP_ZIEL      Ordner auf dem Webspace, muss auf /rezepte enden
+
+name: Veröffentlichen
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: veroeffentlichen
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  SFTP_HOST: access-5018866023.webspace-host.com
+  SFTP_BENUTZER: su1643047
+
+jobs:
+  veroeffentlichen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Seiten bauen
+        run: python3 build.py
+
+      - name: Tests
+        run: python3 -m unittest discover -s tests
+
+      - name: Zielordner prüfen
+        env:
+          SFTP_ZIEL: ${{ vars.SFTP_ZIEL }}
+        run: |
+          case "$SFTP_ZIEL" in
+            */rezepte) ;;
+            *) echo "SFTP_ZIEL muss auf /rezepte enden (ist: '$SFTP_ZIEL')"; exit 1 ;;
+          esac
+
+      - name: Host-Schlüssel hinterlegen
+        run: |
+          mkdir -p ~/.ssh
+          cat > ~/.ssh/known_hosts <<'KEYS'
+          access-5018866023.webspace-host.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINbBMvvDjN4IP04VAZlDH42A+HL25ifeIK9CorAvaMA/
+          access-5018866023.webspace-host.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFjDE2sDVlaHhXudMMsLEuJvY+nBuTbwLGpQkLaJ5oxIR9vXinw/2dSzqnDAlrmJ1ZgWKQnvPh7Mz770Hp/sobU=
+          KEYS
+
+      - name: lftp installieren
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Hochladen
+        env:
+          LFTP_PASSWORD: ${{ secrets.SFTP_PASSWORT }}
+          SFTP_ZIEL: ${{ vars.SFTP_ZIEL }}
+        run: |
+          lftp --env-password -u "$SFTP_BENUTZER" "sftp://$SFTP_HOST" -e "
+            set sftp:connect-program 'ssh -a -x -o StrictHostKeyChecking=yes';
+            set net:max-retries 2;
+            mkdir -p -f '$SFTP_ZIEL';
+            mirror --reverse --delete --verbose --exclude-glob .nojekyll docs/ '$SFTP_ZIEL';
+            quit"

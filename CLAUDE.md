@@ -1,13 +1,14 @@
 # Rezept-Graph
 
-Rezeptseiten im Stil von "Cooking for Engineers" aus einer JSON-Beschreibung pro Rezept, veröffentlicht über GitHub Pages. Maßgeblich ist `SPEC.md`, der Arbeitsstand steht in `PLAN.md`.
+Rezeptseiten im Stil von "Cooking for Engineers" aus einer JSON-Beschreibung pro Rezept, veröffentlicht unter https://www.moinsdifficile.de/rezepte/ (Webspace, Upload per GitHub Action). Maßgeblich ist `SPEC.md`, der Arbeitsstand steht in `PLAN.md`.
 
 ## Aufbau
 
 - `rezepte/` – eine JSON-Datei pro Rezept (Quelle der Wahrheit)
 - `rezeptgraph/` – Python-Paket: Validierung, Layout (Zellraster), HTML-Rendering
 - `build.py` – erzeugt die Seiten aus `rezepte/` nach `docs/`
-- `docs/` – erzeugte Seiten, von GitHub Pages ausgeliefert (nicht von Hand bearbeiten)
+- `docs/` – erzeugte Seiten, werden per SFTP auf den Webspace gespiegelt (nicht von Hand bearbeiten)
+- `.github/workflows/veroeffentlichen.yml` – bei Push auf `main`: bauen, testen, `docs/` nach `moinsdifficile.de/rezepte/` hochladen
 - `tests/` – Tests und Fixtures
 - `vorlage/` – lokale Referenzbilder, nicht im Repo (Urheberrecht, steht in .gitignore)
 
@@ -51,5 +52,10 @@ Ablauf, wenn Michi ein Foto oder einen Screenshot eines Rezepts liefert:
    perl -e 'alarm 60; exec @ARGV' "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --use-mock-keychain --user-data-dir=<tmp>/chrome --window-size=1200,900 --screenshot=<tmp>/vorschau.png file://<pfad>
    ```
 
+   In einer Cloud-Session (Linux, kein Mac-Chrome): dasselbe mit `chromium`, `chromium-browser` oder `google-chrome` statt des Mac-Pfads, `timeout 60` statt `perl`. Gibt es keinen Browser, Michi Zutaten, Schritt-Baum und Allergene als Liste zeigen und sagen, dass der Screenshot fehlt.
+
    Das PNG selbst ansehen und gegen das Foto prüfen (Zutaten, Mengen, Baumstruktur), Fehler vorher beheben. Dann Michi den Screenshot (oder Pfad) und die Allergene zeigen und auf Bestätigung warten.
-6. Erst nach Bestätigung: `python3 build.py`, Tests laufen lassen, committen. Push nur nach Michis Freigabe. Danach die URL nennen: `https://mnkeller.github.io/rezepte/<slug>.html`.
+6. Erst nach Bestätigung: `python3 build.py`, Tests laufen lassen, committen. Push nur nach Michis Freigabe.
+   - Am Mac: auf `main` pushen.
+   - In einer Cloud-Session (Claude-App): den Arbeits-Branch pushen und einen Pull Request auf `main` anlegen; Michi merged ihn.
+   Der Push auf `main` startet die Action, die nach ein bis zwei Minuten veröffentlicht. Danach die URL nennen: `https://www.moinsdifficile.de/rezepte/<slug>.html`.
