@@ -133,8 +133,10 @@ def seite(rezept):
 
 STARTSEITE_CSS = BASIS_CSS + """
 body{padding:3rem 1rem 3rem;text-align:center;line-height:1.5}
-h1{margin:0 0 2rem;font-size:clamp(2.8rem,9vw,6rem);line-height:1;letter-spacing:-0.02em;font-weight:300}
-h1 strong{display:block;font-weight:800}
+h1{margin:0 0 1rem;font-size:clamp(2.8rem,11vw,6rem);line-height:1;letter-spacing:-0.02em;font-weight:300}
+h1 strong{font-weight:800}
+.leitsatz{margin:0 0 2rem;font-size:clamp(1.5rem,5vw,2.4rem);line-height:1.1;letter-spacing:-0.01em;font-weight:300}
+.leitsatz strong{font-weight:800}
 .untertitel{margin:0 auto 3rem;max-width:40rem;font-size:1.1rem;font-weight:500;color:#333}
 .rezepte{list-style:none;margin:0 auto;padding:0;max-width:40rem;border-top:1px solid #111;text-align:left}
 .rezepte li{border-bottom:1px solid #111}
@@ -158,11 +160,12 @@ def startseite(rezepte):
         "<head>",
         '<meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
-        "<title>Rezepte, weniger schwer</title>",
+        "<title>moins.rezepte – Rezepte, weniger schwer</title>",
         f"<style>{STARTSEITE_CSS}</style>",
         "</head>",
         "<body>",
-        '<h1><strong>Rezepte</strong> weniger schwer</h1>',
+        '<h1><strong>moins</strong>.rezepte</h1>',
+        '<p class="leitsatz"><strong>Rezepte</strong> weniger schwer</p>',
         '<p class="untertitel">Zutaten, Schritte und Allergene auf einen Blick.</p>',
     ]
     if sortiert:

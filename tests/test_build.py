@@ -325,11 +325,6 @@ class StartseitePaket5d(unittest.TestCase):
 
     # Titel und Motto
 
-    def test_h1_enthaelt_rezepte(self):
-        m = re.search(r"<h1[^>]*>(.*?)</h1>", self.html, flags=re.S | re.I)
-        self.assertIsNotNone(m, "keine h1")
-        self.assertIn("Rezepte", norm(re.sub(r"<[^>]+>", " ", m.group(1))))
-
     def _body(self):
         m = re.search(r"<body[^>]*>(.*)</body>", self.html, flags=re.S | re.I)
         self.assertIsNotNone(m, "kein body")
@@ -339,10 +334,22 @@ class StartseitePaket5d(unittest.TestCase):
         roh = re.sub(r"<(style|script)\b.*?</\1>", " ", self._body(), flags=re.S | re.I)
         return norm(re.sub(r"<[^>]+>", " ", roh)).replace(" ,", ",")
 
-    def test_motto_steht_in_der_h1(self):
+    def test_h1_ist_moins_rezepte(self):
+        # Paket 8: "moins" fett, ".rezepte" leicht, ohne Leerzeichen dazwischen
         m = re.search(r"<h1[^>]*>(.*?)</h1>", self.html, flags=re.S | re.I)
         self.assertIsNotNone(m, "keine h1")
-        self.assertEqual(norm(re.sub(r"<[^>]+>", " ", m.group(1))), "Rezepte weniger schwer")
+        self.assertEqual(m.group(1), "<strong>moins</strong>.rezepte")
+
+    def test_leitsatz_unter_der_h1(self):
+        # Paket 8: Leitsatz im Stil der h1 (fett/leicht), nur kleiner
+        m = re.search(r'</h1>\s*<p class="leitsatz">(.*?)</p>', self.html, flags=re.S | re.I)
+        self.assertIsNotNone(m, "kein Leitsatz direkt unter der h1")
+        self.assertEqual(m.group(1), "<strong>Rezepte</strong> weniger schwer")
+        rs = dict(regeln(self.css))
+        self.assertEqual(rs[".leitsatz"].get("font-weight"), "300")
+        self.assertEqual(rs[".leitsatz strong"].get("font-weight"), "800")
+        self.assertEqual(rs["h1"].get("font-weight"), "300")
+        self.assertEqual(rs["h1 strong"].get("font-weight"), "800")
 
     def test_motto_mit_komma_nicht_im_sichtbaren_body(self):
         self.assertNotIn(MOTTO, self._body_text())
@@ -471,8 +478,8 @@ class StartseitePaket5d(unittest.TestCase):
         p = einlesen(html)
         self.assertIn(("lang.html", "x" * 70), p.links)
 
-    def test_title_ist_genau_das_motto(self):
-        self.assertEqual(norm("".join(self.p.title)), MOTTO)
+    def test_title_ist_genau_marke_und_motto(self):
+        self.assertEqual(norm("".join(self.p.title)), "moins.rezepte – " + MOTTO)
 
     # Rezeptseiten im selben Look (Paket 5f)
 

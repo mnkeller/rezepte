@@ -148,6 +148,16 @@ Abnahmekriterien:
 
 Erledigt 20.11.: Secret `SFTP_PASSWORT` und Variable `SFTP_ZIEL` (`/clickandbuilds/moinsdifficile/rezepte`) angelegt. Python im Workflow ist das des Runners (3.9 gibt es auf ubuntu-latest nicht mehr); der Code bleibt 3.9-kompatibel.
 
+## Paket 8: Marke "moins.rezepte" auf der Startseite
+
+Wunsch von Michi (20.11.): Titel "moins.rezepte" ("moins" fett, ".rezepte" leicht), darunter "Rezepte weniger schwer" im gleichen Stil, kleiner.
+
+Abnahmekriterien:
+- [x] h1 `<strong>moins</strong>.rezepte`, h1 300, `strong` 800.
+- [x] Direkt darunter `<p class="leitsatz"><strong>Rezepte</strong> weniger schwer</p>`, gleicher Schnitt, kleiner.
+- [x] Browser-Titel "moins.rezepte – Rezepte, weniger schwer"; Untertitel, Liste und Hinweis bleiben.
+- [x] Screenshot bei 1000 px und 375 px (iframe) geprüft.
+
 ## Entscheidungen (Stopp 1, 22.10.)
 
 - `gh` wird installiert, Pages per `gh` aktivieren.
