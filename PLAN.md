@@ -139,14 +139,14 @@ Wunsch von Michi (20.11.): Seiten unter `https://www.moinsdifficile.de/rezepte/`
 Lösung: GitHub bleibt Quelle der Wahrheit. Eine GitHub Action baut bei jedem Push auf `main` die Seiten, lässt die Tests laufen und spiegelt `docs/` per SFTP in den Ordner `rezepte/` neben der WordPress-Installation. Rezepte kommen über eine Claude-Code-Session in der Claude-App (Cloud-Session auf dem Repo), die den Ablauf aus `CLAUDE.md` abarbeitet.
 
 Abnahmekriterien:
-- [ ] Workflow `.github/workflows/veroeffentlichen.yml`: bei Push auf `main` (und von Hand startbar) `build.py`, alle Tests, dann Upload. Schlägt ein Test fehl, wird nichts hochgeladen.
-- [ ] Upload per SFTP mit festem Host-Schlüssel (kein blindes Vertrauen), Passwort nur als GitHub-Secret, nie im Repo.
-- [ ] Der Upload löscht nur innerhalb des Zielordners; der Workflow bricht ab, wenn der Zielordner nicht auf `/rezepte` endet (Schutz der WordPress-Seite).
-- [ ] `https://www.moinsdifficile.de/rezepte/` zeigt die Startseite, Rezeptseiten und Zurück-Link funktionieren, WordPress bleibt unverändert.
-- [ ] GitHub Pages ist abgeschaltet, `mnkeller.github.io/rezepte/` liefert nichts mehr.
-- [ ] `CLAUDE.md`: neue URL, Ablauf in einer Cloud-Session (Screenshot ohne Mac-Chrome, Veröffentlichung über Branch und Pull Request).
+- [x] Workflow `.github/workflows/veroeffentlichen.yml`: bei Push auf `main` (und von Hand startbar) `build.py`, alle Tests, dann Upload. Schlägt ein Test fehl, wird nichts hochgeladen.
+- [x] Upload per SFTP mit festem Host-Schlüssel (kein blindes Vertrauen), Passwort nur als GitHub-Secret, nie im Repo.
+- [x] Der Upload löscht nur innerhalb des Zielordners; der Workflow bricht ab, wenn der Zielordner nicht auf `/rezepte` endet (Schutz der WordPress-Seite).
+- [x] `https://www.moinsdifficile.de/rezepte/` zeigt die Startseite, Rezeptseiten und Zurück-Link funktionieren, WordPress bleibt unverändert.
+- [x] GitHub Pages ist abgeschaltet, `mnkeller.github.io/rezepte/` liefert nichts mehr.
+- [x] `CLAUDE.md`: neue URL, Ablauf in einer Cloud-Session (Screenshot ohne Mac-Chrome, Veröffentlichung über Branch und Pull Request).
 
-Braucht Michi: Secret `SFTP_PASSWORT` und Variable `SFTP_ZIEL` im Repo anlegen, Freigabe zum Push.
+Erledigt 20.11.: Secret `SFTP_PASSWORT` und Variable `SFTP_ZIEL` (`/clickandbuilds/moinsdifficile/rezepte`) angelegt. Python im Workflow ist das des Runners (3.9 gibt es auf ubuntu-latest nicht mehr); der Code bleibt 3.9-kompatibel.
 
 ## Entscheidungen (Stopp 1, 22.10.)
 
